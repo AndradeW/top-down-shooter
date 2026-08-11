@@ -1,0 +1,41 @@
+# Configuración interna de opencode (no se publica)
+.agents/
+skills-lock.json
+
+# Documentos de desarrollo (no se publican)
+AGENTS.md
+GAME_PLAN.md
+UI_DESIGN.md
+
+# Dependencias
+node_modules/
+package-lock.json
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# Entorno y secretos
+.env
+.env.*
+*.pem
+*.key
+
+# Editor y sistema operativo
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Python (servidor estático local)
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Temporales y caché
+tmp/
+.cache/
