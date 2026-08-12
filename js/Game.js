@@ -57,6 +57,20 @@ export class Game {
       }
     });
 
+    // Vibración (solo compatible en móviles)
+    this.vibrateEnabled = localStorage.getItem('topDownShooter_vibrate') !== 'off';
+    this.vibrateButton = document.getElementById('vibrateButton');
+    document.getElementById('vibrateButton').addEventListener('click', () => {
+      this.vibrateEnabled = !this.vibrateEnabled;
+      localStorage.setItem('topDownShooter_vibrate', this.vibrateEnabled ? 'on' : 'off');
+      this.vibrateButton.classList.toggle('muted', !this.vibrateEnabled);
+    });
+    if (!navigator.vibrate) {
+      this.vibrateButton.classList.add('hidden');
+    } else {
+      this.vibrateButton.classList.toggle('muted', !this.vibrateEnabled);
+    }
+
     this.pauseButton = document.getElementById('pauseButton');
     document.getElementById('pauseButton').addEventListener('click', () => this.togglePause());
     document.getElementById('resumeButton').addEventListener('click', () => this.togglePause());
@@ -104,6 +118,10 @@ export class Game {
     this.state = 'playing';
     this.ui.hideOverlays();
     this.ui.pauseButton.classList.remove('hidden');
+    if (navigator.vibrate) {
+      this.ui.vibrateButton.classList.remove('hidden');
+      this.vibrateButton.classList.toggle('muted', !this.vibrateEnabled);
+    }
     this.sound.startMusic();
   }
 
@@ -177,6 +195,16 @@ export class Game {
 
   addShake(amount) {
     this.shake = Math.min(18, this.shake + amount);
+  }
+
+  vibrate(pattern) {
+    if (this.vibrateEnabled && navigator.vibrate) {
+      try {
+        navigator.vibrate(pattern);
+      } catch {
+        // Vibración no disponible en algunos navegadores: se ignora.
+      }
+    }
   }
 
   dropXP(x, y) {
@@ -304,6 +332,7 @@ export class Game {
         if (d < e.radius + this.player.radius) {
           this.player.takeDamage(e.damage);
           this.addShake(8);
+          this.vibrate(30);
           this.emitParticles(this.player.x, this.player.y, '#e74c3c', 12);
           this.sound.playDamage();
           e.alive = false;
@@ -315,6 +344,7 @@ export class Game {
     // Game Over
     if (!this.player.alive) {
       this.state = 'gameover';
+      this.vibrate([60, 40, 120]);
       const isNewRecord = this.saveBestScore();
       const history = this.addToHistory();
       this.ui.showGameOver(this.score, this.timeSurvived, this.enemiesKilled, this.level, this.bestScore, isNewRecord, history);

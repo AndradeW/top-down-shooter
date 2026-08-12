@@ -4,6 +4,7 @@ export class UI {
     this.gameover = document.getElementById('gameover');
     this.pauseEl = document.getElementById('pause');
     this.pauseButton = document.getElementById('pauseButton');
+    this.vibrateButton = document.getElementById('vibrateButton');
     this.upgradesEl = document.getElementById('upgrades');
     this.upgradeOptionsEl = document.getElementById('upgradeOptions');
     this.scoreEl = document.getElementById('score');
@@ -34,6 +35,7 @@ export class UI {
     this.gameover.classList.add('hidden');
     this.pauseEl.classList.add('hidden');
     this.pauseButton.classList.add('hidden');
+    this.vibrateButton.classList.add('hidden');
     this.upgradesEl.classList.add('hidden');
   }
 
