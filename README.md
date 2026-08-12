@@ -19,6 +19,8 @@ Shooter arcade 2D de supervivencia (top-down) para navegador. Sobrevive a oleada
 
 ## Controles
 
+### Escritorio (ratón + teclado)
+
 | Acción | Tecla/Entrada |
 |---|---|
 | Moverse | `W` `A` `S` `D` o flechas |
@@ -26,6 +28,13 @@ Shooter arcade 2D de supervivencia (top-down) para navegador. Sobrevive a oleada
 | Disparar | Clic izquierdo (mantener para disparo continuo) |
 | Jugar / Reiniciar | Clic en el botón o `Enter` |
 | Silenciar sonido | Botón 🔊 (abajo a la derecha) |
+
+### Móvil / táctil
+
+| Acción | Gest |
+|---|---|
+| Moverse | Joystick virtual en la mitad izquierda de la pantalla |
+| Apuntar y disparar | Joystick virtual en la mitad derecha (dispara mientras lo mantienes) |
 
 ## Requisitos
 
@@ -84,8 +93,7 @@ js/
 
 ## Estado del proyecto
 
-- Iteraciones 0–8 completadas y probadas: MVP jugable, oleadas, enemigos, experiencia/niveles, mejoras, pulido visual, audio, UI y estadísticas.
-- **Iteración 9 (Mobile)**: postergada/opcional (controles táctiles y adaptación a pantallas pequeñas).
+- Iteraciones 0–9 completadas y probadas: MVP jugable, oleadas, enemigos, experiencia/niveles, mejoras, pulido visual, audio, UI y estadísticas, y soporte móvil (controles táctiles de doble joystick).
 - Disponible: récord local en `localStorage`, estadísticas de partida y aviso de nuevo récord.
 
 ## Historial de versiones
@@ -102,3 +110,4 @@ js/
 | 0.8.0 | UI y estadísticas: récord local, estadísticas de partida y menú mejorado. |
 | 0.9.0 | Plan de UI documentado y despliegue preparado para GitHub Pages. |
 | 0.10.0 | Pulido de UI aplicado: tipografías Orbitron/Rubik, sistema de tokens, rediseño de menú/HUD/game over/mejoras, indicador de vida baja, accesibilidad y `prefers-reduced-motion`. |
+| 0.11.0 | Soporte móvil: controles táctiles de doble joystick, adaptación de la UI a pantallas pequeñas y desbloqueo de audio con gesto táctil. |
