@@ -7,6 +7,7 @@ export class UI {
     this.scoreEl = document.getElementById('score');
     this.waveEl = document.getElementById('wave');
     this.healthFill = document.getElementById('healthFill');
+    this.livesEl = document.getElementById('lives');
     this.levelEl = document.getElementById('level');
     this.xpFill = document.getElementById('xpFill');
     this.menuRecord = document.getElementById('menuRecord');
@@ -40,6 +41,7 @@ export class UI {
     this.scoreEl.textContent = `Puntos: ${score}`;
     const pct = Math.max(0, Math.min(100, (health / maxHealth) * 100));
     this.healthFill.style.width = `${pct}%`;
+    this.livesEl.textContent = `❤ ${Math.floor(health)}/${maxHealth}`;
     this.healthFill.classList.toggle('danger', pct < 25);
   }
 
