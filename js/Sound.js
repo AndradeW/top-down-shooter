@@ -18,6 +18,7 @@ export class SoundManager {
     };
     window.addEventListener('click', resume, { once: false });
     window.addEventListener('keydown', resume, { once: false });
+    window.addEventListener('touchend', resume, { once: false });
   }
 
   init() {

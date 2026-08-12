@@ -27,6 +27,10 @@ html, body {
   font-family: var(--font-body);
   color: var(--text-primary);
   user-select: none;
+  touch-action: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  overscroll-behavior: none;
 }
 
 canvas {
@@ -51,6 +55,15 @@ canvas {
 
 #soundButton:hover {
   background: rgba(255, 255, 255, 0.25);
+}
+
+@media (pointer: coarse) {
+  #soundButton {
+    width: 52px;
+    height: 52px;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    right: calc(16px + env(safe-area-inset-right));
+  }
 }
 
 #soundButton.muted {
@@ -171,7 +184,7 @@ canvas {
   background: var(--bg-overlay);
   z-index: 20;
   text-align: center;
-  padding: 24px;
+  padding: calc(24px + env(safe-area-inset-top)) calc(24px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(24px + env(safe-area-inset-left));
   animation: overlayIn 0.25s ease-out;
 }
 
@@ -245,6 +258,13 @@ canvas {
   cursor: pointer;
   transition: background 0.15s, transform 0.1s;
   text-transform: uppercase;
+}
+
+@media (pointer: coarse) {
+  .primary-btn {
+    padding: 18px 56px;
+    font-size: 18px;
+  }
 }
 
 .primary-btn:hover {
@@ -352,6 +372,17 @@ canvas {
   #wave { font-size: 22px; letter-spacing: 4px; }
   #upgradeOptions { flex-direction: column; align-items: stretch; }
   .upgrade-card { min-width: 0; width: 100%; }
+  #bars { width: 140px; top: 40px; right: 8px; }
+  #level { right: 8px; font-size: 14px; }
+  #score { font-size: 14px; }
+  #hud { top: calc(8px + env(safe-area-inset-top)); }
+  #soundButton { bottom: 16px; right: 16px; }
+}
+
+@media (pointer: coarse) {
+  .upgrade-card {
+    min-height: 88px;
+  }
 }
 
 /* ===== Reduced motion ===== */

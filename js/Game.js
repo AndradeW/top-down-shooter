@@ -180,15 +180,23 @@ export class Game {
     this.timeSurvived += dt;
     this.player.update(dt, this.input, this.width, this.height);
 
-    // Puntería del ratón (coordenadas relativas al lienzo)
-    const rect = this.canvas.getBoundingClientRect();
-    this.aimX = this.input.mouseX - rect.left;
-    this.aimY = this.input.mouseY - rect.top;
+    // Puntería: táctil (joystick) o ratón (coordenadas relativas al lienzo)
+    const aimVec = this.input.getAimVector();
+    if (aimVec) {
+      const aimDist = 500;
+      this.aimX = this.player.x + aimVec.x * aimDist;
+      this.aimY = this.player.y + aimVec.y * aimDist;
+    } else {
+      const rect = this.canvas.getBoundingClientRect();
+      this.aimX = this.input.mouseX - rect.left;
+      this.aimY = this.input.mouseY - rect.top;
+    }
     this.player.setAim(this.aimX, this.aimY);
 
-    // Disparo continuo con clic mantenido
+    // Disparo continuo con clic mantenido o joystick táctil derecho
     this.fireCooldown -= dt;
-    if (this.input.mouseDown && this.fireCooldown <= 0) {
+    const firing = this.input.mouseDown || this.input.isFiring();
+    if (firing && this.fireCooldown <= 0) {
       this.fire();
       this.fireCooldown = this.fireRate;
     }
@@ -313,6 +321,40 @@ export class Game {
     if (this.player) this.player.draw(ctx);
 
     ctx.restore();
+
+    if (this.state === 'playing' && this.input.hasTouch) {
+      this.drawJoysticks();
+    }
+  }
+
+  drawJoysticks() {
+    const ctx = this.ctx;
+    const t = this.input.touch;
+
+    const drawStick = (ox, oy, kx, ky, knobSize) => {
+      ctx.strokeStyle = 'rgba(244, 244, 245, 0.35)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(ox, oy, this.input.STICK_RADIUS, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(244, 244, 245, 0.12)';
+      ctx.beginPath();
+      ctx.arc(ox, oy, this.input.STICK_RADIUS, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = 'rgba(244, 244, 245, 0.5)';
+      ctx.beginPath();
+      ctx.arc(kx, ky, knobSize, 0, Math.PI * 2);
+      ctx.fill();
+    };
+
+    if (t.moveActive) {
+      drawStick(t.moveOriginX, t.moveOriginY, t.moveX, t.moveY, 22);
+    }
+    if (t.aimActive) {
+      drawStick(t.aimOriginX, t.aimOriginY, t.aimX, t.aimY, 22);
+    }
   }
 
   loop(timestamp) {
