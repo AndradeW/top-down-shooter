@@ -24,8 +24,8 @@ export class Input {
       aimY: 0,
       firing: false,
     };
-    this.STICK_RADIUS = 48;
-    this.DEAD_ZONE = 8;
+    this.STICK_RADIUS = 64;
+    this.DEAD_ZONE = 4;
 
     this.attach();
     if (this.hasTouch) {
@@ -152,7 +152,11 @@ export class Input {
       let y = this.touch.moveY - this.touch.moveOriginY;
       const dist = Math.hypot(x, y);
       if (dist < this.DEAD_ZONE) return { x: 0, y: 0 };
-      return { x: x / this.STICK_RADIUS, y: y / this.STICK_RADIUS };
+      // Curva de sensibilidad no lineal: más control en desplazamientos pequeños
+      const mag = Math.min(1, dist / this.STICK_RADIUS);
+      const eased = mag * (2 - mag);
+      if (dist === 0) return { x: 0, y: 0 };
+      return { x: (x / dist) * eased, y: (y / dist) * eased };
     }
 
     let x = 0;
