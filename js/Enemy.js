@@ -54,12 +54,16 @@ export class Enemy {
     this.zigzagPhase = Math.random() * Math.PI * 2;
     this.zigzagFreq = 4 + Math.random() * 2;
     this.zigzagAmp = 0.4 + Math.random() * 0.4;
+    this.px = x;
+    this.py = y;
   }
 
   update(dt, player) {
     const dx = player.x - this.x;
     const dy = player.y - this.y;
     const dist = Math.hypot(dx, dy) || 1;
+    this.px = player.x;
+    this.py = player.y;
 
     // Movimiento base: perseguir al jugador
     let moveX = dx / dist;
@@ -89,32 +93,91 @@ export class Enemy {
   }
 
   draw(ctx) {
-    ctx.fillStyle = this.color;
-    ctx.strokeStyle = this.border;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
+    ctx.save();
 
-    // Marcador visual según el tipo
-    if (this.type === 'tank') {
-      ctx.fillStyle = '#4a235a';
-      ctx.fillRect(this.x - 6, this.y - 6, 12, 12);
-    } else if (this.type === 'fast') {
-      ctx.fillStyle = '#b9770e';
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (this.type === 'zigzag') {
-      ctx.strokeStyle = '#0e6251';
+    // Glow exterior común
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 14;
+
+    if (this.type === 'fast') {
+      // Interceptor: nave triangular puntiaguda, apunta al jugador
+      const angle = Math.atan2(this.py - this.y, this.px - this.x);
+      ctx.translate(this.x, this.y);
+      ctx.rotate(angle);
+      ctx.fillStyle = this.color;
+      ctx.strokeStyle = this.border;
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(this.x - 5, this.y - 5);
-      ctx.lineTo(this.x + 5, this.y + 5);
-      ctx.moveTo(this.x - 5, this.y + 5);
-      ctx.lineTo(this.x + 5, this.y - 5);
+      ctx.moveTo(this.radius * 1.2, 0);
+      ctx.lineTo(-this.radius * 0.9, -this.radius * 0.6);
+      ctx.lineTo(-this.radius * 0.5, 0);
+      ctx.lineTo(-this.radius * 0.9, this.radius * 0.6);
+      ctx.closePath();
+      ctx.fill();
       ctx.stroke();
+    } else if (this.type === 'tank') {
+      // Acorazado: hexágono con doble capa y torreta central
+      ctx.translate(this.x, this.y);
+      ctx.fillStyle = this.color;
+      ctx.strokeStyle = this.border;
+      ctx.lineWidth = 3;
+      this.polygon(ctx, 0, 0, this.radius, 6, 0);
+      ctx.fill();
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#4a235a';
+      this.polygon(ctx, 0, 0, this.radius * 0.6, 6, 0.5);
+      ctx.fill();
+    } else if (this.type === 'zigzag') {
+      // OVNI: platillo elíptico con antena
+      ctx.translate(this.x, this.y);
+      ctx.rotate(0.4);
+      ctx.fillStyle = this.color;
+      ctx.strokeStyle = this.border;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, this.radius, this.radius * 0.55, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = 'rgba(244, 244, 245, 0.35)';
+      ctx.beginPath();
+      ctx.ellipse(0, -this.radius * 0.1, this.radius * 0.45, this.radius * 0.2, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      // Caza alienígena: tres círculos (platillo con esfera central)
+      ctx.fillStyle = this.color;
+      ctx.strokeStyle = this.border;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(this.x - this.radius * 0.7, this.y, this.radius * 0.55, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(this.x + this.radius * 0.7, this.y, this.radius * 0.55, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius * 0.75, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = this.border;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius * 0.4, 0, Math.PI * 2);
+      ctx.fill();
     }
+
+    ctx.restore();
+  }
+
+  polygon(ctx, cx, cy, r, sides, rot) {
+    ctx.beginPath();
+    for (let i = 0; i < sides; i++) {
+      const a = (i / sides) * Math.PI * 2 + rot;
+      if (i === 0) ctx.moveTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+      else ctx.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+    }
+    ctx.closePath();
   }
 }

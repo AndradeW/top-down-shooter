@@ -239,6 +239,16 @@ export class Game {
     this.timeSurvived += dt;
     this.player.update(dt, this.input, this.width, this.height);
 
+    // Estela de propulsión de la nave (partículas tras el jugador)
+    this.engineTrailTimer -= dt;
+    if (this.engineTrailTimer <= 0) {
+      this.engineTrailTimer = 0.05;
+      const angle = Math.atan2(this.player.aimY - this.player.y, this.player.aimX - this.player.x);
+      const tx = this.player.x - Math.cos(angle) * this.player.radius * 1.9;
+      const ty = this.player.y - Math.sin(angle) * this.player.radius * 1.9;
+      this.particles.push(new Particle(tx, ty, '#00e5ff'));
+    }
+
     // Puntería: táctil (joystick) o ratón (coordenadas relativas al lienzo)
     const aimVec = this.input.getAimVector();
     if (aimVec) {
