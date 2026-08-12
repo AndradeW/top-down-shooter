@@ -222,6 +222,24 @@ canvas {
   margin-bottom: 4px;
 }
 
+.touch-controls {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .keyboard-controls {
+    display: none;
+  }
+
+  .touch-controls {
+    display: flex;
+  }
+
+  .overlay .hint {
+    display: none;
+  }
+}
+
 .controls-list b {
   color: var(--text-primary);
   font-weight: 500;
@@ -229,6 +247,13 @@ canvas {
 
 .subtitle {
   font-size: 16px;
+  color: var(--text-secondary);
+}
+
+.objective {
+  max-width: 420px;
+  font-size: 15px;
+  line-height: 1.5;
   color: var(--text-secondary);
 }
 
