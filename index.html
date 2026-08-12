@@ -15,6 +15,9 @@
   <!-- Botón de sonido -->
   <button id="soundButton" title="Activar/desactivar sonido" aria-label="Activar o desactivar el sonido">🔊</button>
 
+  <!-- Botón de pausa -->
+  <button id="pauseButton" title="Pausar" aria-label="Pausar el juego">⏸</button>
+
   <!-- HUD -->
   <div id="hud">
     <div id="score">Puntos: 0</div>
@@ -61,6 +64,14 @@
     </div>
     <button id="restartButton" class="primary-btn">REINICIAR</button>
     <p class="hint">o pulsa ENTER</p>
+  </div>
+
+  <!-- Pausa -->
+  <div id="pause" class="overlay hidden">
+    <h1 class="game-title">PAUSA</h1>
+    <button id="resumeButton" class="primary-btn">CONTINUAR</button>
+    <button id="restartFromPauseButton" class="primary-btn">REINICIAR</button>
+    <p class="hint">o pulsa P / ESC</p>
   </div>
 
   <!-- Selección de mejora -->

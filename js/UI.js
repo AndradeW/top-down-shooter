@@ -2,6 +2,8 @@ export class UI {
   constructor() {
     this.menu = document.getElementById('menu');
     this.gameover = document.getElementById('gameover');
+    this.pauseEl = document.getElementById('pause');
+    this.pauseButton = document.getElementById('pauseButton');
     this.upgradesEl = document.getElementById('upgrades');
     this.upgradeOptionsEl = document.getElementById('upgradeOptions');
     this.scoreEl = document.getElementById('score');
@@ -28,13 +30,24 @@ export class UI {
     }
     this.menu.classList.remove('hidden');
     this.gameover.classList.add('hidden');
+    this.pauseEl.classList.add('hidden');
+    this.pauseButton.classList.add('hidden');
     this.upgradesEl.classList.add('hidden');
   }
 
   hideOverlays() {
     this.menu.classList.add('hidden');
     this.gameover.classList.add('hidden');
+    this.pauseEl.classList.add('hidden');
     this.upgradesEl.classList.add('hidden');
+  }
+
+  showPause() {
+    this.pauseEl.classList.remove('hidden');
+  }
+
+  hidePause() {
+    this.pauseEl.classList.add('hidden');
   }
 
   updateHUD(score, health, maxHealth) {
@@ -66,6 +79,7 @@ export class UI {
     this.statKills.textContent = `Enemigos eliminados: ${enemiesKilled}`;
     this.statLevel.textContent = `Rango alcanzado: ${level}`;
     this.statBest.textContent = `Récord: ${bestScore}`;
+    this.pauseButton.classList.add('hidden');
     this.gameover.classList.remove('hidden');
   }
 

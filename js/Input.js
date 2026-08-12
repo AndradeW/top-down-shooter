@@ -5,6 +5,7 @@ export class Input {
     this.mouseY = 0;
     this.mouseDown = false;
     this.onEnterPress = [];
+    this.onPausePress = [];
 
     // Estado táctil (doble joystick virtual)
     this.hasTouch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
@@ -41,6 +42,9 @@ export class Input {
       this.keys.add(key);
       if (key === 'Enter') {
         this.onEnterPress.forEach((fn) => fn());
+      }
+      if (key === 'p' || key === 'P' || key === 'Escape') {
+        this.onPausePress.forEach((fn) => fn());
       }
     });
 

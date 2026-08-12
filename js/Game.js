@@ -56,6 +56,16 @@ export class Game {
         else this.sound.stopMusic();
       }
     });
+
+    this.pauseButton = document.getElementById('pauseButton');
+    document.getElementById('pauseButton').addEventListener('click', () => this.togglePause());
+    document.getElementById('resumeButton').addEventListener('click', () => this.togglePause());
+    document.getElementById('restartFromPauseButton').addEventListener('click', () => this.start());
+    this.input.onPausePress.push(() => this.togglePause());
+
+    window.addEventListener('blur', () => {
+      if (this.state === 'playing') this.pause();
+    });
     this.input.onEnterPress.push(() => {
       if (this.state === 'menu' || this.state === 'gameover') this.start();
     });
@@ -93,7 +103,28 @@ export class Game {
     this.waveTimer = 2.5;
     this.state = 'playing';
     this.ui.hideOverlays();
+    this.ui.pauseButton.classList.remove('hidden');
     this.sound.startMusic();
+  }
+
+  pause() {
+    if (this.state !== 'playing') return;
+    this.state = 'paused';
+    this.ui.showPause();
+    this.sound.stopMusic();
+  }
+
+  resume() {
+    if (this.state !== 'paused') return;
+    this.state = 'playing';
+    this.lastTime = null;
+    this.ui.hidePause();
+    this.sound.startMusic();
+  }
+
+  togglePause() {
+    if (this.state === 'playing') this.pause();
+    else if (this.state === 'paused') this.resume();
   }
 
   startWave() {
@@ -367,7 +398,7 @@ export class Game {
       this.ui.updateHUD(this.score, this.player.health, this.player.maxHealth);
       this.ui.updateWave(this.wave, this.wavePhase, this.waveTimer);
       this.ui.updateLevel(this.level, this.xp, this.xpToNext);
-    } else if (this.state === 'levelup') {
+    } else if (this.state === 'paused' || this.state === 'levelup') {
       this.draw();
     }
 
