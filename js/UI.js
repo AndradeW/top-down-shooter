@@ -19,6 +19,8 @@ export class UI {
     this.statKills = document.getElementById('statKills');
     this.statLevel = document.getElementById('statLevel');
     this.statBest = document.getElementById('statBest');
+    this.historyBlock = document.getElementById('historyBlock');
+    this.historyList = document.getElementById('historyList');
   }
 
   showMenu(bestScore) {
@@ -72,15 +74,34 @@ export class UI {
     this.xpFill.style.width = `${pct}%`;
   }
 
-  showGameOver(score, timeSurvived, enemiesKilled, level, bestScore, isNewRecord) {
+  showGameOver(score, timeSurvived, enemiesKilled, level, bestScore, isNewRecord, history = []) {
     this.finalScore.textContent = `Puntos: ${score}`;
     this.newRecord.classList.toggle('hidden', !isNewRecord);
     this.statTime.textContent = `Tiempo: ${Math.floor(timeSurvived / 60)}m ${Math.floor(timeSurvived % 60)}s`;
     this.statKills.textContent = `Enemigos eliminados: ${enemiesKilled}`;
     this.statLevel.textContent = `Rango alcanzado: ${level}`;
     this.statBest.textContent = `Récord: ${bestScore}`;
+    this.renderHistory(history, score);
     this.pauseButton.classList.add('hidden');
     this.gameover.classList.remove('hidden');
+  }
+
+  renderHistory(history, currentScore) {
+    if (!history || history.length === 0) {
+      this.historyBlock.classList.add('hidden');
+      return;
+    }
+    this.historyBlock.classList.remove('hidden');
+    this.historyList.innerHTML = '';
+    history.forEach((s) => {
+      const li = document.createElement('li');
+      li.textContent = s;
+      if (s === currentScore) {
+        li.classList.add('current');
+        li.textContent = `→ ${s}`;
+      }
+      this.historyList.appendChild(li);
+    });
   }
 
   showUpgrades(upgrades) {

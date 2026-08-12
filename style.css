@@ -387,6 +387,47 @@ canvas {
   color: var(--accent-primary);
 }
 
+#historyBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.history-title {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-secondary);
+}
+
+#historyList {
+  list-style: none;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+#historyList li {
+  min-width: 44px;
+  padding: 6px 10px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid rgba(244, 244, 245, 0.2);
+  border-radius: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+#historyList li.current {
+  border-color: var(--accent-xp);
+  color: var(--accent-xp);
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.25);
+}
+
 /* ===== Upgrades ===== */
 #upgradeOptions {
   display: flex;

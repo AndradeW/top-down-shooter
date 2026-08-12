@@ -316,7 +316,8 @@ export class Game {
     if (!this.player.alive) {
       this.state = 'gameover';
       const isNewRecord = this.saveBestScore();
-      this.ui.showGameOver(this.score, this.timeSurvived, this.enemiesKilled, this.level, this.bestScore, isNewRecord);
+      const history = this.addToHistory();
+      this.ui.showGameOver(this.score, this.timeSurvived, this.enemiesKilled, this.level, this.bestScore, isNewRecord, history);
       this.sound.playGameOver();
       this.sound.stopMusic();
     }
@@ -329,6 +330,28 @@ export class Game {
       return true;
     }
     return false;
+  }
+
+  loadHistory() {
+    try {
+      const raw = localStorage.getItem('topDownShooter_history');
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch {
+      return [];
+    }
+  }
+
+  addToHistory() {
+    try {
+      const history = this.loadHistory();
+      history.push(this.score);
+      const last = history.slice(-5);
+      localStorage.setItem('topDownShooter_history', JSON.stringify(last));
+      return last;
+    } catch {
+      return [];
+    }
   }
 
   draw() {
