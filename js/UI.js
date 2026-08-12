@@ -45,14 +45,14 @@ export class UI {
 
   updateWave(wave, phase, countdown) {
     if (phase === 'between') {
-      this.waveEl.textContent = `Oleada ${wave + 1} en ${Math.ceil(countdown)}s`;
+      this.waveEl.textContent = `Nivel ${wave + 1} en ${Math.ceil(countdown)}s`;
     } else {
-      this.waveEl.textContent = `Oleada ${wave}`;
+      this.waveEl.textContent = `Nivel ${wave}`;
     }
   }
 
   updateLevel(level, xp, xpToNext) {
-    this.levelEl.textContent = `Nivel ${level}`;
+    this.levelEl.textContent = `Rango ${level}`;
     const pct = Math.max(0, Math.min(100, (xp / xpToNext) * 100));
     this.xpFill.style.width = `${pct}%`;
   }
@@ -62,7 +62,7 @@ export class UI {
     this.newRecord.classList.toggle('hidden', !isNewRecord);
     this.statTime.textContent = `Tiempo: ${Math.floor(timeSurvived / 60)}m ${Math.floor(timeSurvived % 60)}s`;
     this.statKills.textContent = `Enemigos eliminados: ${enemiesKilled}`;
-    this.statLevel.textContent = `Nivel alcanzado: ${level}`;
+    this.statLevel.textContent = `Rango alcanzado: ${level}`;
     this.statBest.textContent = `Récord: ${bestScore}`;
     this.gameover.classList.remove('hidden');
   }
