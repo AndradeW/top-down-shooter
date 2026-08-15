@@ -39,18 +39,18 @@ Shooter arcade 2D de supervivencia (top-down) para navegador. Sobrevive a oleada
 | Pausar | Botón ⏸ (arriba a la derecha) o tecla `P`/`Escape` |
 | Vibración | Botón 📳 (arriba a la derecha, solo móviles compatibles) |
 
-### Mando (Gamepad API, cualquier control con mapeo estándar)
+### Mando (Gamepad API, cualquier control)
 
-Compatible con cualquier mando que exponga el *mapping* estándar de la Gamepad API (Xbox, PlayStation, Switch, genéricos). Se detecta automáticamente al conectar el mando.
+Compatible con cualquier mando que exponga la Gamepad API (Xbox, PlayStation, Switch, genéricos). Se detecta automáticamente al conectar el mando. Los ejes del analógico derecho y los botones se **autocalibran**: si el mando no declara el mapeo estándar, el juego detecta qué ejes son realmente el stick derecho para que la puntería sea de 360°.
 
 | Acción | Entrada |
 |---|---|
 | Moverse | Analógico izquierdo |
 | Apuntar | Analógico derecho (mantiene la última dirección si lo centras) |
-| Disparar | `RT` o `A` (mantener para disparo continuo) |
+| Disparar | `RT`, `RB` o `A` (mantener para disparo continuo) |
 | Jugar / Reiniciar | `Start` o `A` |
-| Elegir mejora | `A` (selecciona la primera mejora disponible) |
-| Pausar | Botón `Select`/compartir |
+| Elegir mejora | Flechas del D-pad para navegar y `A` para confirmar |
+| Pausar | Botón `Start` o `Select`/compartir |
 
 > Nota: la Gamepad API está disponible en Chrome, Edge y Firefox (escritorio); no está soportada en Safari para iOS.
 
@@ -114,7 +114,7 @@ js/
 
 - Iteraciones 0–9b completadas y probadas: MVP jugable, oleadas, enemigos, experiencia/niveles, mejoras, pulido visual, audio, UI y estadísticas, soporte móvil (controles táctiles de doble joystick) y pulido por feedback.
 - Disponible: récord local en `localStorage`, historial de los últimos 5 puntajes y aviso de nuevo récord.
-- En desarrollo: soporte de mando genérico (Gamepad API) con controles estándar para cualquier gamepad.
+- Disponible: soporte de mando genérico (Gamepad API) con autocalibración para cualquier gamepad.
 
 ## Historial de versiones
 
@@ -132,4 +132,4 @@ js/
 | 0.10.0 | Pulido de UI aplicado: tipografías Orbitron/Rubik, sistema de tokens, rediseño de menú/HUD/game over/mejoras, indicador de vida baja, accesibilidad y `prefers-reduced-motion`. |
 | 0.11.0 | Soporte móvil: controles táctiles de doble joystick, adaptación de la UI a pantallas pequeñas y desbloqueo de audio con gesto táctil. |
 | 0.12.0 | Pulido por feedback: menú con objetivo, temática espacial, pausa, historial de puntajes, vida numérica, joystick más preciso, vibración configurable y renombrado de Oleada→Nivel / Nivel→Rango. |
-| 0.13.0 | Soporte de mando genérico (Gamepad API): movimiento con el analógico izquierdo, puntería con el derecho, disparo con `RT`/`A`, `Start` para jugar/reiniciar y `A` para elegir la primera mejora. |
+| 0.13.0 | Soporte de mando genérico (Gamepad API): movimiento con el analógico izquierdo, puntería de 360° con el derecho (autocalibración de ejes para mandos no estándar), disparo con `RT`/`RB`/`A`, `Start`/`Select` para pausar, y selección de mejoras con el D-pad + `A`. |

@@ -7,6 +7,10 @@ export class Input {
     this.onEnterPress = [];
     this.onPausePress = [];
     this.onActionAPress = [];
+    this.onDPadLeft = [];
+    this.onDPadRight = [];
+    this.onDPadUp = [];
+    this.onDPadDown = [];
 
     // Estado táctil (doble joystick virtual)
     this.hasTouch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
@@ -28,7 +32,8 @@ export class Input {
     this.STICK_RADIUS = 64;
     this.DEAD_ZONE = 4;
 
-    // Estado del mando (Gamepad API). Genérico: usa el mapeo estándar.
+    // Estado del mando (Gamepad API). Genérico: detecta los ejes reales del
+    // stick derecho porque muchos mandos no siguen el mapeo estándar.
     this.gamepad = {
       connected: false,
       id: null,
@@ -37,8 +42,19 @@ export class Input {
       aimX: 0,
       aimY: 0,
       firing: false,
+    // Ejes asignados al stick derecho (se auto-detectan con calibración)
+    aimAxis: [2, 3],
+    // Solo se usa la puntería del mando cuando sabemos qué ejes son el stick
+    // derecho. Hasta entonces el ratón sigue controlando la puntería.
+    aimCalibrated: false,
+    calibration: {},
+      // Flancos para detectar pulsaciones únicas
+      aWasDown: false,
+      pauseWasDown: false,
+      enterWasDown: false,
     };
     this.GAMEPAD_DEAD_ZONE = 0.25;
+    this.DPAD_THRESHOLD = 0.5;
 
     this.attach();
     if (this.hasTouch) {
@@ -90,6 +106,13 @@ export class Input {
       const pad = e.gamepad;
       this.gamepad.connected = true;
       this.gamepad.id = pad.id;
+      // Nuevo mando: reinicia la calibración de ejes y los flancos
+      this.gamepad.calibration = {};
+      this.gamepad.aimAxis = [2, 3];
+      this.gamepad.aimCalibrated = false;
+      this.gamepad.aWasDown = false;
+      this.gamepad.pauseWasDown = false;
+      this.gamepad.enterWasDown = false;
     });
 
     window.addEventListener('gamepaddisconnected', () => {
@@ -97,6 +120,31 @@ export class Input {
       this.gamepad.id = null;
       this.gamepad.firing = false;
     });
+  }
+
+  // Muestra el rango real de cada eje para detectar el stick derecho.
+  // Los sticks llegan a -1..1; los gatillos analógicos solo van de 0..1.
+  // Eje con calibración A -> B (B = -A, invertido): el mando invierte el eje Y.
+  calibrateAxis(idx, value) {
+    const cal = this.gamepad.calibration;
+    if (!cal[idx]) cal[idx] = { min: value, max: value };
+    const c = cal[idx];
+    c.min = Math.min(c.min, value);
+    c.max = Math.max(c.max, value);
+  }
+
+  // Determina los ejes del stick derecho. Un eje que alcanza un valor negativo
+  // real es un stick: los gatillos analógicos solo van de 0..1, nunca negativo.
+  updateAimAxis() {
+    const cal = this.gamepad.calibration;
+    for (let i = 2; i < 8; i++) {
+      if (!cal[i] || !cal[i + 1]) continue;
+      if (cal[i].min < -0.3 || cal[i + 1].min < -0.3) {
+        this.gamepad.aimAxis = [i, i + 1];
+        return true;
+      }
+    }
+    return false;
   }
 
   // Lee el mando cada frame (se llama desde Game.loop).
@@ -112,34 +160,69 @@ export class Input {
     this.gamepad.connected = true;
     this.gamepad.id = pad.id;
 
-    const axis = (idx) => (pad.axes && pad.axes[idx] !== undefined ? pad.axes[idx] : 0);
-    this.gamepad.moveX = axis(0);
-    this.gamepad.moveY = axis(1);
-    this.gamepad.aimX = axis(2);
-    this.gamepad.aimY = axis(3);
-
-    // Botones genéricos (mapeo estándar): A = 0, Start = 9, RT = 7.
-    const btn = (idx) => (pad.buttons && pad.buttons[idx] ? pad.buttons[idx].pressed : false);
-    const enterPressed = btn(9) || btn(0);
-    if (enterPressed && !this.gamepad.enterWasDown) {
-      this.onEnterPress.forEach((fn) => fn());
+    const axes = pad.axes || [];
+    // Calibra los ejes y detecta cuáles son el stick derecho
+    for (let i = 0; i < axes.length; i++) {
+      if (axes[i] !== undefined) this.calibrateAxis(i, axes[i]);
     }
-    this.gamepad.enterWasDown = enterPressed;
+    // Si el mando declara mapeo estándar, el stick derecho es seguro en 2/3
+    if (pad.mapping === 'standard') {
+      this.gamepad.aimAxis = [2, 3];
+      this.gamepad.aimCalibrated = true;
+    } else {
+      if (this.updateAimAxis()) this.gamepad.aimCalibrated = true;
+    }
+    const [ax, ay] = this.gamepad.aimAxis;
 
-    const pausePressed = btn(8); // Botón compartir/select (genérico)
+    this.gamepad.moveX = axes[0] !== undefined ? axes[0] : 0;
+    this.gamepad.moveY = axes[1] !== undefined ? axes[1] : 0;
+    this.gamepad.aimX = axes[ax] !== undefined ? axes[ax] : 0;
+    this.gamepad.aimY = axes[ay] !== undefined ? axes[ay] : 0;
+
+    // Botones genéricos: busca por varias posiciones porque el mapeo varía.
+    // Disparo con A (0), RB (5) o RT (7) usando pressed o valor analógico.
+    const btnPressed = (idx) => {
+      const b = pad.buttons && pad.buttons[idx];
+      return !!(b && (b.pressed || b.value > 0.5));
+    };
+    this.gamepad.firing = btnPressed(0) || btnPressed(5) || btnPressed(7);
+
+    // A (0): confirmar recompensa
+    const aPressed = btnPressed(0);
+    if (aPressed && !this.gamepad.aWasDown) {
+      this.onActionAPress.forEach((fn) => fn());
+    }
+    this.gamepad.aWasDown = aPressed;
+
+    // Pausa con Start (9) o Select (8)
+    const pausePressed = btnPressed(9) || btnPressed(8);
     if (pausePressed && !this.gamepad.pauseWasDown) {
       this.onPausePress.forEach((fn) => fn());
     }
     this.gamepad.pauseWasDown = pausePressed;
 
-    const actionAPressed = btn(0);
-    if (actionAPressed && !this.gamepad.aWasDown) {
-      this.onActionAPress.forEach((fn) => fn());
+    // Confirmar/menú con Start (9) o A (0)
+    const enterPressed = btnPressed(9) || btnPressed(0);
+    if (enterPressed && !this.gamepad.enterWasDown) {
+      this.onEnterPress.forEach((fn) => fn());
     }
-    this.gamepad.aWasDown = actionAPressed;
+    this.gamepad.enterWasDown = enterPressed;
 
-    // Disparo con RT o A
-    this.gamepad.firing = btn(7) || btn(0);
+    // D-pad (botones 12-15) para navegar recompensas
+    const dpad = {
+      left: btnPressed(14),
+      right: btnPressed(15),
+      up: btnPressed(12),
+      down: btnPressed(13),
+    };
+    if (dpad.left && !this.gamepad.dpadLWasDown) this.onDPadLeft.forEach((fn) => fn());
+    if (dpad.right && !this.gamepad.dpadRWasDown) this.onDPadRight.forEach((fn) => fn());
+    if (dpad.up && !this.gamepad.dpadUWasDown) this.onDPadUp.forEach((fn) => fn());
+    if (dpad.down && !this.gamepad.dpadDWasDown) this.onDPadDown.forEach((fn) => fn());
+    this.gamepad.dpadLWasDown = dpad.left;
+    this.gamepad.dpadRWasDown = dpad.right;
+    this.gamepad.dpadUWasDown = dpad.up;
+    this.gamepad.dpadDWasDown = dpad.down;
   }
 
   // Aplica deadzone y normaliza un par de ejes del mando.
@@ -161,7 +244,7 @@ export class Input {
 
   // Devuelve vector de puntería del mando (o null si no hay entrada).
   getGamepadAimVector() {
-    if (!this.gamepad.connected) return null;
+    if (!this.gamepad.connected || !this.gamepad.aimCalibrated) return null;
     const v = this.gamepadVector(this.gamepad.aimX, this.gamepad.aimY);
     if (v.x === 0 && v.y === 0) return null;
     return v;

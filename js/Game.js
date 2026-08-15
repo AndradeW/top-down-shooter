@@ -29,6 +29,7 @@ export class Game {
     this.level = 1;
     this.xpToNext = 10;
     this.pendingUpgrades = [];
+    this.selectedUpgrade = 0;
     this.timeSurvived = 0;
     this.enemiesKilled = 0;
     this.bestScore = parseInt(localStorage.getItem('topDownShooter_bestScore') || '0', 10);
@@ -87,9 +88,13 @@ export class Game {
     });
     this.input.onActionAPress.push(() => {
       if (this.state === 'levelup' && this.pendingUpgrades.length > 0) {
-        this.applyUpgrade(this.pendingUpgrades[0]);
+        this.applyUpgrade(this.pendingUpgrades[this.selectedUpgrade]);
       }
     });
+    this.input.onDPadLeft.push(() => this.moveUpgradeSelection(-1));
+    this.input.onDPadRight.push(() => this.moveUpgradeSelection(1));
+    this.input.onDPadUp.push(() => this.moveUpgradeSelection(-1));
+    this.input.onDPadDown.push(() => this.moveUpgradeSelection(1));
 
     this.ui.showMenu(this.bestScore);
     this.draw();
@@ -114,6 +119,7 @@ export class Game {
     this.level = 1;
     this.xpToNext = 10;
     this.pendingUpgrades = [];
+    this.selectedUpgrade = 0;
     this.timeSurvived = 0;
     this.enemiesKilled = 0;
     this.fireCooldown = 0;
@@ -231,9 +237,18 @@ export class Game {
   levelUp() {
     this.pendingUpgrades = rollUpgrades(3);
     this.pendingUpgrades.forEach((u) => { u.onSelect = () => this.applyUpgrade(u); });
+    this.selectedUpgrade = 0;
     this.state = 'levelup';
     this.ui.showUpgrades(this.pendingUpgrades);
+    this.ui.highlightUpgrade(this.selectedUpgrade);
     this.sound.playLevelUp();
+  }
+
+  moveUpgradeSelection(delta) {
+    if (this.state !== 'levelup' || this.pendingUpgrades.length === 0) return;
+    this.selectedUpgrade =
+      (this.selectedUpgrade + delta + this.pendingUpgrades.length) % this.pendingUpgrades.length;
+    this.ui.highlightUpgrade(this.selectedUpgrade);
   }
 
   applyUpgrade(upgrade) {
@@ -267,8 +282,8 @@ export class Game {
       const aimDist = 500;
       this.aimX = this.player.x + gpAim.x * aimDist;
       this.aimY = this.player.y + gpAim.y * aimDist;
-    } else if (!this.input.gamepad.connected) {
-      // Solo se usa el ratón si no hay mando: con mando y stick centrado se mantiene la última puntería
+    } else if (!this.input.gamepad.connected || !this.input.gamepad.aimCalibrated) {
+      // Sin mando, o con mando aún sin calibrar: el ratón controla la puntería
       const rect = this.canvas.getBoundingClientRect();
       this.aimX = this.input.mouseX - rect.left;
       this.aimY = this.input.mouseY - rect.top;

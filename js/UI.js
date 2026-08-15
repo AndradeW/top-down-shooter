@@ -108,7 +108,7 @@ export class UI {
 
   showUpgrades(upgrades) {
     this.upgradeOptionsEl.innerHTML = '';
-    upgrades.forEach((upgrade) => {
+    upgrades.forEach((upgrade, index) => {
       const btn = document.createElement('button');
       btn.className = 'upgrade-card';
       btn.innerHTML = `
@@ -120,6 +120,13 @@ export class UI {
       this.upgradeOptionsEl.appendChild(btn);
     });
     this.upgradesEl.classList.remove('hidden');
+  }
+
+  highlightUpgrade(index) {
+    const cards = this.upgradeOptionsEl.querySelectorAll('.upgrade-card');
+    cards.forEach((card, i) => {
+      card.classList.toggle('selected', i === index);
+    });
   }
 
   hideUpgrades() {
