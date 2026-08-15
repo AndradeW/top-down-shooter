@@ -169,6 +169,10 @@ export class Input {
     this.gamepad.connected = true;
     this.gamepad.id = pad.id;
 
+    // Log automático en consola: solo cuando cambia el estado (evita spam).
+    // Útil para diagnosticar mandos genéricos sin tocar teclas.
+    this.logGamepadState(pad);
+
     const axes = pad.axes || [];
     // Calibra los ejes y detecta cuáles son el stick derecho
     for (let i = 0; i < axes.length; i++) {
@@ -377,8 +381,7 @@ export class Input {
   }
 
   // Estado en vivo del mando para diagnóstico (se dibuja en pantalla).
-  getDebugInfo() {
-    let axes = [];
+  getDebugInfo() {    let axes = [];
     let buttons = [];
     let mapping = '';
     let id = this.gamepad.id || '';
@@ -403,5 +406,19 @@ export class Input {
       aimCalibrated: this.gamepad.aimCalibrated,
       firing: this.gamepad.firing,
     };
+  }
+
+  // Imprime en la consola el estado del mando solo cuando cambia.
+  logGamepadState(pad) {
+    const axes = Array.from(pad.axes || []).map((v) => Number(v.toFixed(2)));
+    const buttons = (pad.buttons || [])
+      .map((b, i) => (b && (b.pressed || b.value > 0.5) ? i : null))
+      .filter((i) => i !== null);
+    const sig = `${axes.join(',')}|${buttons.join(',')}`;
+    if (sig === this._lastGpSig) return;
+    this._lastGpSig = sig;
+    console.log(
+      `[MANDO] mapping=${pad.mapping || 'ninguno'} | ejes=[${axes.join(', ')}] | botones=[${buttons.join(', ') || '-'}]`
+    );
   }
 }
