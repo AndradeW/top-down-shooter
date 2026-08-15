@@ -133,25 +133,24 @@ export class Input {
     c.max = Math.max(c.max, value);
   }
 
-  // Determina los ejes del stick derecho. Un eje que alcanza un valor negativo
-  // real es un stick: los gatillos analógicos solo van de 0..1, nunca negativo.
-  // No confía en `mapping === 'standard'`: muchos mandos genéricos lo declaran
-  // aunque sus ejes reales estén desplazados.
+  // Determina los ejes del stick derecho observando el rango real de cada eje.
+  // Un stick cruza ambos signos (p. ej. -1..1); un gatillo en reposo queda fijo
+  // en -1 o 0 y solo va en un sentido. No confía en `mapping === 'standard'`.
   updateAimAxis() {
     const cal = this.gamepad.calibration;
-    const anyNegative = (i) => cal[i] && cal[i].min < -0.3;
-    // Prefiere el par estándar (2,3) si muestra actividad de stick
-    if (anyNegative(2) && anyNegative(3)) {
-      this.gamepad.aimAxis = [2, 3];
-      return true;
+    const isStick = (i) => cal[i] && cal[i].min < -0.5 && cal[i].max > 0.5;
+    // Recoge todos los ejes que se comportan como sticks (cruzan ambos signos)
+    const sticks = [];
+    for (let i = 0; i < 12; i++) {
+      if (isStick(i)) sticks.push(i);
     }
-    // Si no, busca cualquier par consecutivo con al menos un eje en negativo
-    for (let i = 2; i < 8; i++) {
-      if (!cal[i] || !cal[i + 1]) continue;
-      if (anyNegative(i) || anyNegative(i + 1)) {
-        this.gamepad.aimAxis = [i, i + 1];
-        return true;
-      }
+    // Excluye el stick izquierdo (típicamente los ejes 0 y 1)
+    const right = sticks.filter((i) => i !== 0 && i !== 1);
+    if (right.length >= 2) {
+      const x = Math.min(right[0], right[1]);
+      const y = Math.max(right[0], right[1]);
+      this.gamepad.aimAxis = [x, y];
+      return true;
     }
     return false;
   }
@@ -190,12 +189,12 @@ export class Input {
     this.gamepad.aimY = axes[ay] !== undefined ? axes[ay] : 0;
 
     // Botones genéricos: busca por varias posiciones porque el mapeo varía.
-    // Disparo con A (0), RB (5) o RT (7) usando pressed o valor analógico.
+    // Disparo con A (0), RB (5), LB (4) o RT (7), usando pressed o valor analógico.
     const btnPressed = (idx) => {
       const b = pad.buttons && pad.buttons[idx];
       return !!(b && (b.pressed || b.value > 0.5));
     };
-    this.gamepad.firing = btnPressed(0) || btnPressed(5) || btnPressed(7);
+    this.gamepad.firing = btnPressed(0) || btnPressed(4) || btnPressed(5) || btnPressed(7);
 
     // A (0): confirmar recompensa
     const aPressed = btnPressed(0);
@@ -204,8 +203,8 @@ export class Input {
     }
     this.gamepad.aWasDown = aPressed;
 
-    // Pausa con Start (9) o Select (8)
-    const pausePressed = btnPressed(9) || btnPressed(8);
+    // Pausa con Start (9), Select (8) o un botón extra (11)
+    const pausePressed = btnPressed(9) || btnPressed(8) || btnPressed(11);
     if (pausePressed && !this.gamepad.pauseWasDown) {
       this.onPausePress.forEach((fn) => fn());
     }
@@ -418,7 +417,7 @@ export class Input {
     if (sig === this._lastGpSig) return;
     this._lastGpSig = sig;
     console.log(
-      `[MANDO] mapping=${pad.mapping || 'ninguno'} | ejes=[${axes.join(', ')}] | botones=[${buttons.join(', ') || '-'}]`
+      `[MANDO] "${pad.id || ''}" mapping=${pad.mapping || 'ninguno'} | ejes=[${axes.join(', ')}] | botones=[${buttons.join(', ') || '-'}]`
     );
   }
 }
