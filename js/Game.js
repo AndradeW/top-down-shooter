@@ -56,6 +56,30 @@ export class Game {
         else this.sound.stopMusic();
       }
     });
+
+    // Vibración (solo compatible en móviles)
+    this.vibrateEnabled = localStorage.getItem('topDownShooter_vibrate') !== 'off';
+    this.vibrateButton = document.getElementById('vibrateButton');
+    document.getElementById('vibrateButton').addEventListener('click', () => {
+      this.vibrateEnabled = !this.vibrateEnabled;
+      localStorage.setItem('topDownShooter_vibrate', this.vibrateEnabled ? 'on' : 'off');
+      this.vibrateButton.classList.toggle('muted', !this.vibrateEnabled);
+    });
+    if (!navigator.vibrate) {
+      this.vibrateButton.classList.add('hidden');
+    } else {
+      this.vibrateButton.classList.toggle('muted', !this.vibrateEnabled);
+    }
+
+    this.pauseButton = document.getElementById('pauseButton');
+    document.getElementById('pauseButton').addEventListener('click', () => this.togglePause());
+    document.getElementById('resumeButton').addEventListener('click', () => this.togglePause());
+    document.getElementById('restartFromPauseButton').addEventListener('click', () => this.start());
+    this.input.onPausePress.push(() => this.togglePause());
+
+    window.addEventListener('blur', () => {
+      if (this.state === 'playing') this.pause();
+    });
     this.input.onEnterPress.push(() => {
       if (this.state === 'menu' || this.state === 'gameover') this.start();
     });
@@ -93,7 +117,32 @@ export class Game {
     this.waveTimer = 2.5;
     this.state = 'playing';
     this.ui.hideOverlays();
+    this.ui.pauseButton.classList.remove('hidden');
+    if (navigator.vibrate) {
+      this.ui.vibrateButton.classList.remove('hidden');
+      this.vibrateButton.classList.toggle('muted', !this.vibrateEnabled);
+    }
     this.sound.startMusic();
+  }
+
+  pause() {
+    if (this.state !== 'playing') return;
+    this.state = 'paused';
+    this.ui.showPause();
+    this.sound.stopMusic();
+  }
+
+  resume() {
+    if (this.state !== 'paused') return;
+    this.state = 'playing';
+    this.lastTime = null;
+    this.ui.hidePause();
+    this.sound.startMusic();
+  }
+
+  togglePause() {
+    if (this.state === 'playing') this.pause();
+    else if (this.state === 'paused') this.resume();
   }
 
   startWave() {
@@ -148,6 +197,16 @@ export class Game {
     this.shake = Math.min(18, this.shake + amount);
   }
 
+  vibrate(pattern) {
+    if (this.vibrateEnabled && navigator.vibrate) {
+      try {
+        navigator.vibrate(pattern);
+      } catch {
+        // Vibración no disponible en algunos navegadores: se ignora.
+      }
+    }
+  }
+
   dropXP(x, y) {
     this.xpGems.push(new XP(x, y, this.xpGain));
   }
@@ -179,6 +238,16 @@ export class Game {
   update(dt) {
     this.timeSurvived += dt;
     this.player.update(dt, this.input, this.width, this.height);
+
+    // Estela de propulsión de la nave (partículas tras el jugador)
+    this.engineTrailTimer -= dt;
+    if (this.engineTrailTimer <= 0) {
+      this.engineTrailTimer = 0.05;
+      const angle = Math.atan2(this.player.aimY - this.player.y, this.player.aimX - this.player.x);
+      const tx = this.player.x - Math.cos(angle) * this.player.radius * 1.9;
+      const ty = this.player.y - Math.sin(angle) * this.player.radius * 1.9;
+      this.particles.push(new Particle(tx, ty, '#00e5ff'));
+    }
 
     // Puntería: táctil (joystick) o ratón (coordenadas relativas al lienzo)
     const aimVec = this.input.getAimVector();
@@ -273,6 +342,7 @@ export class Game {
         if (d < e.radius + this.player.radius) {
           this.player.takeDamage(e.damage);
           this.addShake(8);
+          this.vibrate(30);
           this.emitParticles(this.player.x, this.player.y, '#e74c3c', 12);
           this.sound.playDamage();
           e.alive = false;
@@ -284,8 +354,10 @@ export class Game {
     // Game Over
     if (!this.player.alive) {
       this.state = 'gameover';
+      this.vibrate([60, 40, 120]);
       const isNewRecord = this.saveBestScore();
-      this.ui.showGameOver(this.score, this.timeSurvived, this.enemiesKilled, this.level, this.bestScore, isNewRecord);
+      const history = this.addToHistory();
+      this.ui.showGameOver(this.score, this.timeSurvived, this.enemiesKilled, this.level, this.bestScore, isNewRecord, history);
       this.sound.playGameOver();
       this.sound.stopMusic();
     }
@@ -298,6 +370,28 @@ export class Game {
       return true;
     }
     return false;
+  }
+
+  loadHistory() {
+    try {
+      const raw = localStorage.getItem('topDownShooter_history');
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch {
+      return [];
+    }
+  }
+
+  addToHistory() {
+    try {
+      const history = this.loadHistory();
+      history.push(this.score);
+      const last = history.slice(-5);
+      localStorage.setItem('topDownShooter_history', JSON.stringify(last));
+      return last;
+    } catch {
+      return [];
+    }
   }
 
   draw() {
@@ -367,7 +461,7 @@ export class Game {
       this.ui.updateHUD(this.score, this.player.health, this.player.maxHealth);
       this.ui.updateWave(this.wave, this.wavePhase, this.waveTimer);
       this.ui.updateLevel(this.level, this.xp, this.xpToNext);
-    } else if (this.state === 'levelup') {
+    } else if (this.state === 'paused' || this.state === 'levelup') {
       this.draw();
     }
 

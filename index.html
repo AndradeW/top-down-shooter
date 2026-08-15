@@ -15,13 +15,22 @@
   <!-- Botón de sonido -->
   <button id="soundButton" title="Activar/desactivar sonido" aria-label="Activar o desactivar el sonido">🔊</button>
 
+  <!-- Botón de pausa -->
+  <button id="pauseButton" title="Pausar" aria-label="Pausar el juego">⏸</button>
+
+  <!-- Botón de vibración -->
+  <button id="vibrateButton" title="Vibración" aria-label="Activar o desactivar la vibración">📳</button>
+
   <!-- HUD -->
   <div id="hud">
     <div id="score">Puntos: 0</div>
-    <div id="wave">Oleada 1</div>
-    <div id="level">Nivel 1</div>
+    <div id="wave">Nivel 1</div>
+    <div id="level">Rango 1</div>
     <div id="bars">
-      <div id="healthBar"><div id="healthFill"></div></div>
+      <div id="healthBar">
+        <div id="healthFill"></div>
+        <span id="lives">❤ 100/100</span>
+      </div>
       <div id="xpBar"><div id="xpFill"></div></div>
     </div>
   </div>
@@ -29,10 +38,15 @@
   <!-- Menú inicial -->
   <div id="menu" class="overlay">
     <h1 class="game-title">TOP-DOWN SHOOTER</h1>
-    <ul class="controls-list">
+    <p class="objective">Sobrevive a través de los niveles: derriba naves enemigas, recoge energía y elige mejoras para durar más.</p>
+    <ul class="controls-list keyboard-controls">
       <li>Moverse: <b>WASD</b> o <b>flechas</b></li>
       <li>Apuntar: <b>ratón</b></li>
       <li>Disparar: <b>clic izquierdo</b></li>
+    </ul>
+    <ul class="controls-list touch-controls">
+      <li>Moverte: <b>joystick izquierdo</b></li>
+      <li>Apuntar y disparar: <b>joystick derecho</b> (mantén pulsado)</li>
     </ul>
     <p id="menuRecord" class="record hidden"></p>
     <button id="startButton" class="primary-btn">JUGAR</button>
@@ -51,13 +65,25 @@
       <p id="statLevel"></p>
       <p id="statBest"></p>
     </div>
+    <div id="historyBlock" class="hidden">
+      <p class="history-title">Últimos puntajes</p>
+      <ul id="historyList"></ul>
+    </div>
     <button id="restartButton" class="primary-btn">REINICIAR</button>
     <p class="hint">o pulsa ENTER</p>
   </div>
 
+  <!-- Pausa -->
+  <div id="pause" class="overlay hidden">
+    <h1 class="game-title">PAUSA</h1>
+    <button id="resumeButton" class="primary-btn">CONTINUAR</button>
+    <button id="restartFromPauseButton" class="primary-btn">REINICIAR</button>
+    <p class="hint">o pulsa P / ESC</p>
+  </div>
+
   <!-- Selección de mejora -->
   <div id="upgrades" class="overlay hidden">
-    <h1 class="game-title">¡NIVEL!</h1>
+    <h1 class="game-title">¡NUEVO RANGO!</h1>
     <p class="subtitle">Elige una mejora</p>
     <div id="upgradeOptions"></div>
   </div>

@@ -12,11 +12,14 @@ export class SoundManager {
     const resume = () => {
       if (!this.ctx) {
         this.init();
-      } else if (this.ctx.state === 'suspended') {
+      }
+      if (this.ctx && this.ctx.state === 'suspended') {
         this.ctx.resume();
       }
     };
-    window.addEventListener('click', resume, { once: false });
+    // Inicializar/resumir el AudioContext de forma síncrona dentro del
+    // primer gesto del usuario (requisito de iOS/móvil para desbloquear audio).
+    window.addEventListener('pointerdown', resume, { once: false });
     window.addEventListener('keydown', resume, { once: false });
     window.addEventListener('touchend', resume, { once: false });
   }

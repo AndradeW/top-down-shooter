@@ -35,29 +35,54 @@ export class Player {
   }
 
   draw(ctx) {
-    // Línea de puntería
-    ctx.strokeStyle = 'rgba(46, 204, 113, 0.35)';
+    const angle = Math.atan2(this.aimY - this.y, this.aimX - this.x);
+
+    // Línea de puntería (sutil)
+    ctx.strokeStyle = 'rgba(46, 204, 113, 0.25)';
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(this.x, this.y);
     ctx.lineTo(this.aimX, this.aimY);
     ctx.stroke();
 
-    // Cuerpo
+    // Nave triangular orientada hacia donde apunta
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(angle);
+
+    // Glow exterior
+    ctx.shadowColor = 'rgba(46, 204, 113, 0.9)';
+    ctx.shadowBlur = 18;
+
+    // Estela / propulsor (detrás de la nave)
+    ctx.fillStyle = 'rgba(0, 229, 255, 0.5)';
+    ctx.beginPath();
+    ctx.moveTo(-this.radius * 0.4, 0);
+    ctx.lineTo(-this.radius * 1.8, -this.radius * 0.45);
+    ctx.lineTo(-this.radius * 1.8, this.radius * 0.45);
+    ctx.closePath();
+    ctx.fill();
+
+    // Casco
     ctx.fillStyle = '#2ecc71';
     ctx.strokeStyle = '#1d8448';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2.5;
     ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.moveTo(this.radius * 1.1, 0);
+    ctx.lineTo(-this.radius * 0.85, -this.radius * 0.75);
+    ctx.lineTo(-this.radius * 0.35, 0);
+    ctx.lineTo(-this.radius * 0.85, this.radius * 0.75);
+    ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    // Indicador de dirección (hacia el ratón)
-    const angle = Math.atan2(this.aimY - this.y, this.aimX - this.x);
-    ctx.fillStyle = '#1d8448';
+    // Cabina central
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(244, 244, 245, 0.9)';
     ctx.beginPath();
-    ctx.arc(this.x + Math.cos(angle) * this.radius * 0.6,
-      this.y + Math.sin(angle) * this.radius * 0.6, 4, 0, Math.PI * 2);
+    ctx.arc(this.radius * 0.15, 0, this.radius * 0.28, 0, Math.PI * 2);
     ctx.fill();
+
+    ctx.restore();
   }
 }

@@ -70,6 +70,66 @@ canvas {
   opacity: 0.5;
 }
 
+#pauseButton {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top));
+  right: calc(12px + env(safe-area-inset-right));
+  z-index: 30;
+  width: 44px;
+  height: 44px;
+  font-size: 18px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: background 0.15s;
+}
+
+#pauseButton:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+#vibrateButton {
+  position: fixed;
+  top: calc(72px + env(safe-area-inset-top));
+  right: calc(12px + env(safe-area-inset-right));
+  z-index: 30;
+  width: 44px;
+  height: 44px;
+  font-size: 18px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: background 0.15s, opacity 0.15s;
+}
+
+#vibrateButton:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+#vibrateButton.muted {
+  opacity: 0.45;
+}
+
+@media (pointer: coarse) {
+  #pauseButton {
+    width: 52px;
+    height: 52px;
+    top: calc(12px + env(safe-area-inset-top));
+    right: calc(12px + env(safe-area-inset-right));
+  }
+
+  #vibrateButton {
+    width: 52px;
+    height: 52px;
+    top: calc(76px + env(safe-area-inset-top));
+    right: calc(12px + env(safe-area-inset-right));
+  }
+}
+
 :focus-visible {
   outline: 2px solid var(--accent-xp);
   outline-offset: 3px;
@@ -98,6 +158,19 @@ canvas {
   font-variant-numeric: tabular-nums;
 }
 
+#level {
+  position: absolute;
+  left: 16px;
+  top: 28px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--accent-xp);
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.9);
+  font-variant-numeric: tabular-nums;
+}
+
 #wave {
   position: absolute;
   left: 50%;
@@ -111,25 +184,13 @@ canvas {
   text-shadow: 0 0 16px rgba(255, 217, 61, 0.45);
   font-variant-numeric: tabular-nums;
   text-transform: uppercase;
-}
-
-#level {
-  position: absolute;
-  right: 16px;
-  top: 6px;
-  font-family: var(--font-display);
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  color: var(--accent-xp);
-  text-shadow: 0 0 8px rgba(0, 0, 0, 0.9);
-  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 #bars {
   position: absolute;
   right: 16px;
-  top: 32px;
+  top: 62px;
   width: 220px;
   display: flex;
   flex-direction: column;
@@ -143,6 +204,20 @@ canvas {
   border: 1px solid rgba(244, 244, 245, 0.35);
   border-radius: 8px;
   overflow: hidden;
+  position: relative;
+}
+
+#lives {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+  white-space: nowrap;
 }
 
 #healthFill {
@@ -222,6 +297,24 @@ canvas {
   margin-bottom: 4px;
 }
 
+.touch-controls {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .keyboard-controls {
+    display: none;
+  }
+
+  .touch-controls {
+    display: flex;
+  }
+
+  .overlay .hint {
+    display: none;
+  }
+}
+
 .controls-list b {
   color: var(--text-primary);
   font-weight: 500;
@@ -229,6 +322,13 @@ canvas {
 
 .subtitle {
   font-size: 16px;
+  color: var(--text-secondary);
+}
+
+.objective {
+  max-width: 420px;
+  font-size: 15px;
+  line-height: 1.5;
   color: var(--text-secondary);
 }
 
@@ -318,6 +418,47 @@ canvas {
   color: var(--accent-primary);
 }
 
+#historyBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.history-title {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-secondary);
+}
+
+#historyList {
+  list-style: none;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+#historyList li {
+  min-width: 44px;
+  padding: 6px 10px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid rgba(244, 244, 245, 0.2);
+  border-radius: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+#historyList li.current {
+  border-color: var(--accent-xp);
+  color: var(--accent-xp);
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.25);
+}
+
 /* ===== Upgrades ===== */
 #upgradeOptions {
   display: flex;
@@ -369,13 +510,13 @@ canvas {
 @media (max-width: 560px) {
   .game-title { font-size: 30px; letter-spacing: 5px; }
   .final-score { font-size: 30px; }
-  #wave { font-size: 22px; letter-spacing: 4px; }
+  #hud { top: calc(8px + env(safe-area-inset-top)); left: 8px; right: 8px; }
+  #score { font-size: 14px; }
+  #wave { font-size: 20px; letter-spacing: 4px; top: 44px; }
+  #level { left: 8px; top: 28px; font-size: 13px; }
+  #bars { width: 130px; right: 8px; top: 62px; }
   #upgradeOptions { flex-direction: column; align-items: stretch; }
   .upgrade-card { min-width: 0; width: 100%; }
-  #bars { width: 140px; top: 40px; right: 8px; }
-  #level { right: 8px; font-size: 14px; }
-  #score { font-size: 14px; }
-  #hud { top: calc(8px + env(safe-area-inset-top)); }
   #soundButton { bottom: 16px; right: 16px; }
 }
 

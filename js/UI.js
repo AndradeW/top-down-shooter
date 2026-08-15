@@ -2,11 +2,15 @@ export class UI {
   constructor() {
     this.menu = document.getElementById('menu');
     this.gameover = document.getElementById('gameover');
+    this.pauseEl = document.getElementById('pause');
+    this.pauseButton = document.getElementById('pauseButton');
+    this.vibrateButton = document.getElementById('vibrateButton');
     this.upgradesEl = document.getElementById('upgrades');
     this.upgradeOptionsEl = document.getElementById('upgradeOptions');
     this.scoreEl = document.getElementById('score');
     this.waveEl = document.getElementById('wave');
     this.healthFill = document.getElementById('healthFill');
+    this.livesEl = document.getElementById('lives');
     this.levelEl = document.getElementById('level');
     this.xpFill = document.getElementById('xpFill');
     this.menuRecord = document.getElementById('menuRecord');
@@ -16,6 +20,8 @@ export class UI {
     this.statKills = document.getElementById('statKills');
     this.statLevel = document.getElementById('statLevel');
     this.statBest = document.getElementById('statBest');
+    this.historyBlock = document.getElementById('historyBlock');
+    this.historyList = document.getElementById('historyList');
   }
 
   showMenu(bestScore) {
@@ -27,44 +33,77 @@ export class UI {
     }
     this.menu.classList.remove('hidden');
     this.gameover.classList.add('hidden');
+    this.pauseEl.classList.add('hidden');
+    this.pauseButton.classList.add('hidden');
+    this.vibrateButton.classList.add('hidden');
     this.upgradesEl.classList.add('hidden');
   }
 
   hideOverlays() {
     this.menu.classList.add('hidden');
     this.gameover.classList.add('hidden');
+    this.pauseEl.classList.add('hidden');
     this.upgradesEl.classList.add('hidden');
+  }
+
+  showPause() {
+    this.pauseEl.classList.remove('hidden');
+  }
+
+  hidePause() {
+    this.pauseEl.classList.add('hidden');
   }
 
   updateHUD(score, health, maxHealth) {
     this.scoreEl.textContent = `Puntos: ${score}`;
     const pct = Math.max(0, Math.min(100, (health / maxHealth) * 100));
     this.healthFill.style.width = `${pct}%`;
+    this.livesEl.textContent = `❤ ${Math.floor(health)}/${maxHealth}`;
     this.healthFill.classList.toggle('danger', pct < 25);
   }
 
   updateWave(wave, phase, countdown) {
     if (phase === 'between') {
-      this.waveEl.textContent = `Oleada ${wave + 1} en ${Math.ceil(countdown)}s`;
+      this.waveEl.textContent = `Nivel ${wave + 1} en ${Math.ceil(countdown)}s`;
     } else {
-      this.waveEl.textContent = `Oleada ${wave}`;
+      this.waveEl.textContent = `Nivel ${wave}`;
     }
   }
 
   updateLevel(level, xp, xpToNext) {
-    this.levelEl.textContent = `Nivel ${level}`;
+    this.levelEl.textContent = `Rango ${level}`;
     const pct = Math.max(0, Math.min(100, (xp / xpToNext) * 100));
     this.xpFill.style.width = `${pct}%`;
   }
 
-  showGameOver(score, timeSurvived, enemiesKilled, level, bestScore, isNewRecord) {
+  showGameOver(score, timeSurvived, enemiesKilled, level, bestScore, isNewRecord, history = []) {
     this.finalScore.textContent = `Puntos: ${score}`;
     this.newRecord.classList.toggle('hidden', !isNewRecord);
     this.statTime.textContent = `Tiempo: ${Math.floor(timeSurvived / 60)}m ${Math.floor(timeSurvived % 60)}s`;
     this.statKills.textContent = `Enemigos eliminados: ${enemiesKilled}`;
-    this.statLevel.textContent = `Nivel alcanzado: ${level}`;
+    this.statLevel.textContent = `Rango alcanzado: ${level}`;
     this.statBest.textContent = `Récord: ${bestScore}`;
+    this.renderHistory(history, score);
+    this.pauseButton.classList.add('hidden');
     this.gameover.classList.remove('hidden');
+  }
+
+  renderHistory(history, currentScore) {
+    if (!history || history.length === 0) {
+      this.historyBlock.classList.add('hidden');
+      return;
+    }
+    this.historyBlock.classList.remove('hidden');
+    this.historyList.innerHTML = '';
+    history.forEach((s) => {
+      const li = document.createElement('li');
+      li.textContent = s;
+      if (s === currentScore) {
+        li.classList.add('current');
+        li.textContent = `→ ${s}`;
+      }
+      this.historyList.appendChild(li);
+    });
   }
 
   showUpgrades(upgrades) {

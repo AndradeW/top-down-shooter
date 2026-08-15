@@ -13,9 +13,9 @@ Shooter arcade 2D de supervivencia (top-down) para navegador. Sobrevive a oleada
   - Rápido
   - Tanque (más vida y daño)
 - **Experiencia y niveles**: los enemigos sueltan gemas de XP con atracción magnética; al subir de nivel, el juego pausa y muestra **3 mejoras aleatorias** (daño, cadencia, velocidad, vida máx., velocidad de proyectil, XP extra).
-- **Pulido visual**: sistema de partículas (disparo, impactos, recolección de XP, daño), screen shake y retroceso al disparar.
+- **Pulido visual**: sistema de partículas (disparo, impactos, recolección de XP, daño), screen shake, retroceso al disparar y temática visual espacial (nave con estela, enemigos con figuras propias, láseres, glow).
 - **Audio**: efectos de sonido sintetizados con la Web Audio API y música de fondo generativa, con botón de silencio.
-- **Récord local**: guardado en `localStorage` por navegador.
+- **Récord local**: guardado en `localStorage` por navegador, con historial de los últimos 5 puntajes.
 
 ## Controles
 
@@ -27,6 +27,7 @@ Shooter arcade 2D de supervivencia (top-down) para navegador. Sobrevive a oleada
 | Apuntar | Ratón |
 | Disparar | Clic izquierdo (mantener para disparo continuo) |
 | Jugar / Reiniciar | Clic en el botón o `Enter` |
+| Pausar | `P` o `Escape` |
 | Silenciar sonido | Botón 🔊 (abajo a la derecha) |
 
 ### Móvil / táctil
@@ -35,6 +36,8 @@ Shooter arcade 2D de supervivencia (top-down) para navegador. Sobrevive a oleada
 |---|---|
 | Moverse | Joystick virtual en la mitad izquierda de la pantalla |
 | Apuntar y disparar | Joystick virtual en la mitad derecha (dispara mientras lo mantienes) |
+| Pausar | Botón ⏸ (arriba a la derecha) o tecla `P`/`Escape` |
+| Vibración | Botón 📳 (arriba a la derecha, solo móviles compatibles) |
 
 ## Requisitos
 
@@ -93,8 +96,8 @@ js/
 
 ## Estado del proyecto
 
-- Iteraciones 0–9 completadas y probadas: MVP jugable, oleadas, enemigos, experiencia/niveles, mejoras, pulido visual, audio, UI y estadísticas, y soporte móvil (controles táctiles de doble joystick).
-- Disponible: récord local en `localStorage`, estadísticas de partida y aviso de nuevo récord.
+- Iteraciones 0–9b completadas y probadas: MVP jugable, oleadas, enemigos, experiencia/niveles, mejoras, pulido visual, audio, UI y estadísticas, soporte móvil (controles táctiles de doble joystick) y pulido por feedback.
+- Disponible: récord local en `localStorage`, historial de los últimos 5 puntajes y aviso de nuevo récord.
 
 ## Historial de versiones
 
@@ -111,3 +114,4 @@ js/
 | 0.9.0 | Plan de UI documentado y despliegue preparado para GitHub Pages. |
 | 0.10.0 | Pulido de UI aplicado: tipografías Orbitron/Rubik, sistema de tokens, rediseño de menú/HUD/game over/mejoras, indicador de vida baja, accesibilidad y `prefers-reduced-motion`. |
 | 0.11.0 | Soporte móvil: controles táctiles de doble joystick, adaptación de la UI a pantallas pequeñas y desbloqueo de audio con gesto táctil. |
+| 0.12.0 | Pulido por feedback: menú con objetivo, temática espacial, pausa, historial de puntajes, vida numérica, joystick más preciso, vibración configurable y renombrado de Oleada→Nivel / Nivel→Rango. |
