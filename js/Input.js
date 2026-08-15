@@ -135,11 +135,20 @@ export class Input {
 
   // Determina los ejes del stick derecho. Un eje que alcanza un valor negativo
   // real es un stick: los gatillos analógicos solo van de 0..1, nunca negativo.
+  // No confía en `mapping === 'standard'`: muchos mandos genéricos lo declaran
+  // aunque sus ejes reales estén desplazados.
   updateAimAxis() {
     const cal = this.gamepad.calibration;
+    const anyNegative = (i) => cal[i] && cal[i].min < -0.3;
+    // Prefiere el par estándar (2,3) si muestra actividad de stick
+    if (anyNegative(2) && anyNegative(3)) {
+      this.gamepad.aimAxis = [2, 3];
+      return true;
+    }
+    // Si no, busca cualquier par consecutivo con al menos un eje en negativo
     for (let i = 2; i < 8; i++) {
       if (!cal[i] || !cal[i + 1]) continue;
-      if (cal[i].min < -0.3 || cal[i + 1].min < -0.3) {
+      if (anyNegative(i) || anyNegative(i + 1)) {
         this.gamepad.aimAxis = [i, i + 1];
         return true;
       }
@@ -165,13 +174,10 @@ export class Input {
     for (let i = 0; i < axes.length; i++) {
       if (axes[i] !== undefined) this.calibrateAxis(i, axes[i]);
     }
-    // Si el mando declara mapeo estándar, el stick derecho es seguro en 2/3
-    if (pad.mapping === 'standard') {
-      this.gamepad.aimAxis = [2, 3];
-      this.gamepad.aimCalibrated = true;
-    } else {
-      if (this.updateAimAxis()) this.gamepad.aimCalibrated = true;
-    }
+    // Calibra los ejes y detecta cuáles son el stick derecho. No se confía
+    // ciegamente en `mapping === 'standard'`: muchos mandos genéricos lo
+    // declaran pero reportan los ejes desplazados. La calibración prevalece.
+    if (this.updateAimAxis()) this.gamepad.aimCalibrated = true;
     const [ax, ay] = this.gamepad.aimAxis;
 
     this.gamepad.moveX = axes[0] !== undefined ? axes[0] : 0;
@@ -368,5 +374,34 @@ export class Input {
 
   isFiring() {
     return this.touch.firing || this.gamepad.firing;
+  }
+
+  // Estado en vivo del mando para diagnóstico (se dibuja en pantalla).
+  getDebugInfo() {
+    let axes = [];
+    let buttons = [];
+    let mapping = '';
+    let id = this.gamepad.id || '';
+    if (navigator.getGamepads) {
+      const pads = navigator.getGamepads();
+      const pad = Array.from(pads || []).find((p) => p && p.connected);
+      if (pad) {
+        axes = Array.from(pad.axes || []).map((v) => Number(v.toFixed(2)));
+        buttons = (pad.buttons || [])
+          .map((b, i) => (b && (b.pressed || b.value > 0.5) ? i : null))
+          .filter((i) => i !== null);
+        mapping = pad.mapping || '';
+        id = pad.id || id;
+      }
+    }
+    return {
+      id,
+      mapping,
+      axes,
+      buttons,
+      aimAxis: this.gamepad.aimAxis,
+      aimCalibrated: this.gamepad.aimCalibrated,
+      firing: this.gamepad.firing,
+    };
   }
 }

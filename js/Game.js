@@ -447,6 +447,40 @@ export class Game {
     if (this.state === 'playing' && this.input.hasTouch) {
       this.drawJoysticks();
     }
+
+    // Diagnóstico del mando en pantalla (útil para mandos genéricos)
+    if (this.input.gamepad.connected) {
+      this.drawGamepadDebug();
+    }
+  }
+
+  drawGamepadDebug() {
+    const ctx = this.ctx;
+    const info = this.input.getDebugInfo();
+    const lineH = 14;
+    const lines = [
+      `Mando: ${info.id}`,
+      `mapping: ${info.mapping || '(ninguno)'}`,
+      `ejes: [${info.axes.join(', ')}]`,
+      `stick derecho: ejes ${info.aimAxis.join(' & ')} ${info.aimCalibrated ? '(calibrado)' : '(sin calibrar)'}`,
+      `botones: [${info.buttons.join(', ') || '-'}]`,
+    ];
+    ctx.save();
+    ctx.font = '12px monospace';
+    const w = 420;
+    const h = lines.length * lineH + 10;
+    const x = 10;
+    const y = this.height - h - 10;
+    ctx.fillStyle = 'rgba(10, 12, 16, 0.75)';
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = 'rgba(0, 229, 255, 0.5)';
+    ctx.strokeRect(x, y, w, h);
+    ctx.fillStyle = '#ffe66d';
+    ctx.textBaseline = 'top';
+    lines.forEach((line, i) => {
+      ctx.fillText(line, x + 8, y + 6 + i * lineH);
+    });
+    ctx.restore();
   }
 
   drawJoysticks() {
