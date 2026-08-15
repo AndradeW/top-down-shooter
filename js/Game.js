@@ -23,6 +23,8 @@ export class Game {
     this.xpGems = [];
     this.particles = [];
     this.shake = 0;
+    this.aimX = 0;
+    this.aimY = 0;
     this.xp = 0;
     this.level = 1;
     this.xpToNext = 10;
@@ -82,6 +84,11 @@ export class Game {
     });
     this.input.onEnterPress.push(() => {
       if (this.state === 'menu' || this.state === 'gameover') this.start();
+    });
+    this.input.onActionAPress.push(() => {
+      if (this.state === 'levelup' && this.pendingUpgrades.length > 0) {
+        this.applyUpgrade(this.pendingUpgrades[0]);
+      }
     });
 
     this.ui.showMenu(this.bestScore);
@@ -249,20 +256,26 @@ export class Game {
       this.particles.push(new Particle(tx, ty, '#00e5ff'));
     }
 
-    // Puntería: táctil (joystick) o ratón (coordenadas relativas al lienzo)
+    // Puntería: táctil (joystick), mando (stick derecho) o ratón
     const aimVec = this.input.getAimVector();
+    const gpAim = this.input.getGamepadAimVector();
     if (aimVec) {
       const aimDist = 500;
       this.aimX = this.player.x + aimVec.x * aimDist;
       this.aimY = this.player.y + aimVec.y * aimDist;
-    } else {
+    } else if (gpAim) {
+      const aimDist = 500;
+      this.aimX = this.player.x + gpAim.x * aimDist;
+      this.aimY = this.player.y + gpAim.y * aimDist;
+    } else if (!this.input.gamepad.connected) {
+      // Solo se usa el ratón si no hay mando: con mando y stick centrado se mantiene la última puntería
       const rect = this.canvas.getBoundingClientRect();
       this.aimX = this.input.mouseX - rect.left;
       this.aimY = this.input.mouseY - rect.top;
     }
     this.player.setAim(this.aimX, this.aimY);
 
-    // Disparo continuo con clic mantenido o joystick táctil derecho
+    // Disparo continuo con clic mantenido, joystick táctil derecho o mando (RT/A)
     this.fireCooldown -= dt;
     const firing = this.input.mouseDown || this.input.isFiring();
     if (firing && this.fireCooldown <= 0) {
@@ -454,6 +467,8 @@ export class Game {
   loop(timestamp) {
     const dt = Math.min(0.05, (timestamp - (this.lastTime || timestamp)) / 1000);
     this.lastTime = timestamp;
+
+    this.input.pollGamepad();
 
     if (this.state === 'playing') {
       this.update(dt);

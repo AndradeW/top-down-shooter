@@ -6,6 +6,7 @@ export class Input {
     this.mouseDown = false;
     this.onEnterPress = [];
     this.onPausePress = [];
+    this.onActionAPress = [];
 
     // Estado táctil (doble joystick virtual)
     this.hasTouch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
@@ -27,10 +28,23 @@ export class Input {
     this.STICK_RADIUS = 64;
     this.DEAD_ZONE = 4;
 
+    // Estado del mando (Gamepad API). Genérico: usa el mapeo estándar.
+    this.gamepad = {
+      connected: false,
+      id: null,
+      moveX: 0,
+      moveY: 0,
+      aimX: 0,
+      aimY: 0,
+      firing: false,
+    };
+    this.GAMEPAD_DEAD_ZONE = 0.25;
+
     this.attach();
     if (this.hasTouch) {
       this.attachTouch();
     }
+    this.attachGamepad();
   }
 
   attach() {
@@ -69,6 +83,88 @@ export class Input {
       this.keys.clear();
       this.mouseDown = false;
     });
+  }
+
+  attachGamepad() {
+    window.addEventListener('gamepadconnected', (e) => {
+      const pad = e.gamepad;
+      this.gamepad.connected = true;
+      this.gamepad.id = pad.id;
+    });
+
+    window.addEventListener('gamepaddisconnected', () => {
+      this.gamepad.connected = false;
+      this.gamepad.id = null;
+      this.gamepad.firing = false;
+    });
+  }
+
+  // Lee el mando cada frame (se llama desde Game.loop).
+  pollGamepad() {
+    if (!navigator.getGamepads) return;
+    const pads = navigator.getGamepads();
+    const pad = Array.from(pads || []).find((p) => p && p.connected);
+    if (!pad) {
+      this.gamepad.connected = false;
+      this.gamepad.firing = false;
+      return;
+    }
+    this.gamepad.connected = true;
+    this.gamepad.id = pad.id;
+
+    const axis = (idx) => (pad.axes && pad.axes[idx] !== undefined ? pad.axes[idx] : 0);
+    this.gamepad.moveX = axis(0);
+    this.gamepad.moveY = axis(1);
+    this.gamepad.aimX = axis(2);
+    this.gamepad.aimY = axis(3);
+
+    // Botones genéricos (mapeo estándar): A = 0, Start = 9, RT = 7.
+    const btn = (idx) => (pad.buttons && pad.buttons[idx] ? pad.buttons[idx].pressed : false);
+    const enterPressed = btn(9) || btn(0);
+    if (enterPressed && !this.gamepad.enterWasDown) {
+      this.onEnterPress.forEach((fn) => fn());
+    }
+    this.gamepad.enterWasDown = enterPressed;
+
+    const pausePressed = btn(8); // Botón compartir/select (genérico)
+    if (pausePressed && !this.gamepad.pauseWasDown) {
+      this.onPausePress.forEach((fn) => fn());
+    }
+    this.gamepad.pauseWasDown = pausePressed;
+
+    const actionAPressed = btn(0);
+    if (actionAPressed && !this.gamepad.aWasDown) {
+      this.onActionAPress.forEach((fn) => fn());
+    }
+    this.gamepad.aWasDown = actionAPressed;
+
+    // Disparo con RT o A
+    this.gamepad.firing = btn(7) || btn(0);
+  }
+
+  // Aplica deadzone y normaliza un par de ejes del mando.
+  gamepadVector(x, y) {
+    let mag = Math.hypot(x, y);
+    if (mag < this.GAMEPAD_DEAD_ZONE) return { x: 0, y: 0 };
+    const scaled = (mag - this.GAMEPAD_DEAD_ZONE) / (1 - this.GAMEPAD_DEAD_ZONE);
+    if (mag === 0) return { x: 0, y: 0 };
+    return { x: (x / mag) * scaled, y: (y / mag) * scaled };
+  }
+
+  // Devuelve vector de movimiento del mando si está conectado y con stick activo.
+  getGamepadMovement() {
+    if (!this.gamepad.connected) return null;
+    const v = this.gamepadVector(this.gamepad.moveX, this.gamepad.moveY);
+    if (v.x === 0 && v.y === 0) return null;
+    return v;
+  }
+
+  // Devuelve vector de puntería del mando (o null si no hay entrada).
+  getGamepadAimVector() {
+    if (!this.gamepad.connected) return null;
+    const v = this.gamepadVector(this.gamepad.aimX, this.gamepad.aimY);
+    if (v.x === 0 && v.y === 0) return null;
+    return v;
   }
 
   attachTouch() {
@@ -146,6 +242,10 @@ export class Input {
 
   // Devuelve un vector de movimiento normalizado (diagonal compensada)
   getMovement() {
+    // El mando tiene prioridad si está conectado y con stick activo
+    const gpMove = this.getGamepadMovement();
+    if (gpMove) return gpMove;
+
     // Prioridad al joystick táctil si está activo
     if (this.touch.moveActive) {
       let x = this.touch.moveX - this.touch.moveOriginX;
@@ -184,6 +284,6 @@ export class Input {
   }
 
   isFiring() {
-    return this.touch.firing;
+    return this.touch.firing || this.gamepad.firing;
   }
 }
