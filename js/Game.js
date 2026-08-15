@@ -83,6 +83,12 @@ export class Game {
     window.addEventListener('blur', () => {
       if (this.state === 'playing') this.pause();
     });
+    // F2: imprime el estado del mando en la consola para diagnóstico
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'F2') {
+        console.log('[MANDO]', this.input.getDebugInfo());
+      }
+    });
     this.input.onEnterPress.push(() => {
       if (this.state === 'menu' || this.state === 'gameover') this.start();
     });
@@ -271,7 +277,9 @@ export class Game {
       this.particles.push(new Particle(tx, ty, '#00e5ff'));
     }
 
-    // Puntería: táctil (joystick), mando (stick derecho) o ratón
+    // Puntería: táctil (joystick), mando (stick derecho) o ratón.
+    // El ratón siempre funciona como respaldo cuando no hay entrada activa del
+    // mando o del joystick táctil (así no se bloquea con un mando conectado).
     const aimVec = this.input.getAimVector();
     const gpAim = this.input.getGamepadAimVector();
     if (aimVec) {
@@ -282,8 +290,8 @@ export class Game {
       const aimDist = 500;
       this.aimX = this.player.x + gpAim.x * aimDist;
       this.aimY = this.player.y + gpAim.y * aimDist;
-    } else if (!this.input.gamepad.connected || !this.input.gamepad.aimCalibrated) {
-      // Sin mando, o con mando aún sin calibrar: el ratón controla la puntería
+    } else {
+      // Sin entrada táctil ni del stick derecho del mando: el ratón apunta
       const rect = this.canvas.getBoundingClientRect();
       this.aimX = this.input.mouseX - rect.left;
       this.aimY = this.input.mouseY - rect.top;
