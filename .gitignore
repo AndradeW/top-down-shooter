@@ -6,6 +6,7 @@ skills-lock.json
 AGENTS.md
 GAME_PLAN.md
 UI_DESIGN.md
+PLAN_*.md
 
 # Dependencias
 node_modules/

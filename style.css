@@ -491,6 +491,13 @@ canvas {
   background: var(--surface-hover);
 }
 
+.upgrade-card.selected {
+  transform: translateY(-4px);
+  border-color: var(--accent-xp);
+  background: var(--surface-hover);
+  box-shadow: 0 0 0 2px var(--accent-xp);
+}
+
 .upgrade-card .upgrade-icon {
   font-size: 34px;
 }

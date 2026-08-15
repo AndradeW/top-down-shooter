@@ -122,6 +122,13 @@ export class UI {
     this.upgradesEl.classList.remove('hidden');
   }
 
+  highlightUpgrade(index) {
+    const cards = this.upgradeOptionsEl.querySelectorAll('.upgrade-card');
+    cards.forEach((card, i) => {
+      card.classList.toggle('selected', i === index);
+    });
+  }
+
   hideUpgrades() {
     this.upgradesEl.classList.add('hidden');
   }

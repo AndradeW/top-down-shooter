@@ -13,7 +13,7 @@ export class Game {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.ui = ui;
-    this.input = new Input();
+    this.input = new Input(canvas);
     this.sound = new SoundManager();
     this.state = 'menu'; // menu | playing | gameover
     this.score = 0;
@@ -27,6 +27,7 @@ export class Game {
     this.level = 1;
     this.xpToNext = 10;
     this.pendingUpgrades = [];
+    this.selectedUpgrade = 0;
     this.timeSurvived = 0;
     this.enemiesKilled = 0;
     this.bestScore = parseInt(localStorage.getItem('topDownShooter_bestScore') || '0', 10);
@@ -83,6 +84,15 @@ export class Game {
     this.input.onEnterPress.push(() => {
       if (this.state === 'menu' || this.state === 'gameover') this.start();
     });
+    this.input.onActionAPress.push(() => {
+      if (this.state === 'levelup' && this.pendingUpgrades.length > 0) {
+        this.applyUpgrade(this.pendingUpgrades[this.selectedUpgrade]);
+      }
+    });
+    this.input.onDPadLeft.push(() => this.moveUpgradeSelection(-1));
+    this.input.onDPadRight.push(() => this.moveUpgradeSelection(1));
+    this.input.onDPadUp.push(() => this.moveUpgradeSelection(-1));
+    this.input.onDPadDown.push(() => this.moveUpgradeSelection(1));
 
     this.ui.showMenu(this.bestScore);
     this.draw();
@@ -107,6 +117,7 @@ export class Game {
     this.level = 1;
     this.xpToNext = 10;
     this.pendingUpgrades = [];
+    this.selectedUpgrade = 0;
     this.timeSurvived = 0;
     this.enemiesKilled = 0;
     this.fireCooldown = 0;
@@ -224,9 +235,18 @@ export class Game {
   levelUp() {
     this.pendingUpgrades = rollUpgrades(3);
     this.pendingUpgrades.forEach((u) => { u.onSelect = () => this.applyUpgrade(u); });
+    this.selectedUpgrade = 0;
     this.state = 'levelup';
     this.ui.showUpgrades(this.pendingUpgrades);
+    this.ui.highlightUpgrade(this.selectedUpgrade);
     this.sound.playLevelUp();
+  }
+
+  moveUpgradeSelection(delta) {
+    if (this.state !== 'levelup' || this.pendingUpgrades.length === 0) return;
+    this.selectedUpgrade =
+      (this.selectedUpgrade + delta + this.pendingUpgrades.length) % this.pendingUpgrades.length;
+    this.ui.highlightUpgrade(this.selectedUpgrade);
   }
 
   applyUpgrade(upgrade) {
@@ -249,23 +269,16 @@ export class Game {
       this.particles.push(new Particle(tx, ty, '#00e5ff'));
     }
 
-    // Puntería: táctil (joystick) o ratón (coordenadas relativas al lienzo)
-    const aimVec = this.input.getAimVector();
-    if (aimVec) {
-      const aimDist = 500;
-      this.aimX = this.player.x + aimVec.x * aimDist;
-      this.aimY = this.player.y + aimVec.y * aimDist;
-    } else {
-      const rect = this.canvas.getBoundingClientRect();
-      this.aimX = this.input.mouseX - rect.left;
-      this.aimY = this.input.mouseY - rect.top;
-    }
+    // Puntería combinada: joystick táctil, stick derecho del mando o ratón
+    // (el ratón siempre funciona como respaldo cuando no hay otra entrada).
+    const aim = this.input.getAimPoint(this.player.x, this.player.y);
+    this.aimX = aim.x;
+    this.aimY = aim.y;
     this.player.setAim(this.aimX, this.aimY);
 
-    // Disparo continuo con clic mantenido o joystick táctil derecho
+    // Disparo continuo con clic, joystick táctil derecho o mando (RT/RB/A)
     this.fireCooldown -= dt;
-    const firing = this.input.mouseDown || this.input.isFiring();
-    if (firing && this.fireCooldown <= 0) {
+    if (this.input.isFiring() && this.fireCooldown <= 0) {
       this.fire();
       this.fireCooldown = this.fireRate;
     }
@@ -454,6 +467,8 @@ export class Game {
   loop(timestamp) {
     const dt = Math.min(0.05, (timestamp - (this.lastTime || timestamp)) / 1000);
     this.lastTime = timestamp;
+
+    this.input.poll();
 
     if (this.state === 'playing') {
       this.update(dt);
