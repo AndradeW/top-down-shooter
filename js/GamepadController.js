@@ -20,6 +20,9 @@ export class GamepadController extends Controller {
     this.AIM_DISTANCE = 500;
     // Umbral del analógico izquierdo para navegar mejoras
     this.NAV_THRESHOLD = 0.6;
+    // Última dirección de puntería del stick derecho: al soltar el stick se
+    // mantiene (independiente del ratón) hasta que se vuelva a mover.
+    this._lastAim = null;
     // Flancos para detectar pulsaciones únicas por frame de polling
     this._edges = {
       enter: false,
@@ -54,6 +57,7 @@ export class GamepadController extends Controller {
     this.gamepad.connected = false;
     this.gamepad.id = null;
     this.gamepad.firing = false;
+    this._lastAim = null;
     this._resetEdges();
   }
 
@@ -120,8 +124,11 @@ export class GamepadController extends Controller {
   getAimPoint(playerX, playerY) {
     if (!this.gamepad.connected) return null;
     const aimY = Settings.get('invertAimY') ? -this.gamepad.aimY : this.gamepad.aimY;
-    const v = this._vectorAim(this.gamepad.aimX, aimY);
+    const active = this._vectorAim(this.gamepad.aimX, aimY);
+    // Stick centrado: mantener la última dirección (independiente del ratón).
+    const v = active || this._lastAim;
     if (!v) return null;
+    if (active) this._lastAim = active;
     return {
       x: playerX + v.x * this.AIM_DISTANCE,
       y: playerY + v.y * this.AIM_DISTANCE,

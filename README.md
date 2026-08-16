@@ -142,3 +142,4 @@ js/
 | 0.14.0 | Refactor de entrada a controladores desacoplados (teclado/ratón, táctil y mando) y pausa con la barra espaciadora. |
 | 0.15.0 | Menú de configuración: sensibilidad y zona muerta del mando, inversión del eje Y, y toggles de vibración, sonido y screen shake. |
 | 0.16.0 | Navegación de menús con mando/flechas (D-pad/analógico + `A`) y proyectiles que vuelan hasta el borde de la pantalla. |
+| 0.17.0 | Puntería del mando independiente del ratón (mantiene la última dirección al soltar el stick) y sonido compatible con jugar solo con mando. |

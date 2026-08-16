@@ -72,9 +72,11 @@ export class Game {
       onSound: (v) => {
         Settings.set('sound', v);
         this.sound.setEnabled(v);
-        if (this.state === 'playing') {
-          if (v) this.sound.startMusic();
-          else this.sound.stopMusic();
+        if (v) {
+          this.sound.playToggle();
+          if (this.state === 'playing') this.sound.startMusic();
+        } else {
+          this.sound.stopMusic();
         }
       },
       onScreenShake: (v) => Settings.set('screenShake', v),
@@ -514,6 +516,10 @@ export class Game {
     this.lastTime = timestamp;
 
     this.input.poll();
+
+    // Mando conectado (quizá desde antes de cargar la página): intenta
+    // desbloquear el audio aunque no haya habido gesto de ratón/teclado.
+    if (this.input.gamepad.connected) this.sound.unlock();
 
     if (this.state === 'playing') {
       this.update(dt);

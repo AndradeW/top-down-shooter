@@ -9,19 +9,27 @@ export class SoundManager {
   }
 
   attachResumeOnGesture() {
-    const resume = () => {
+    this.unlock = () => {
       if (!this.ctx) {
         this.init();
       }
       if (this.ctx && this.ctx.state === 'suspended') {
-        this.ctx.resume();
+        try {
+          this.ctx.resume();
+        } catch {
+          // Reanudación bloqueada por la política de autoplay: se reintenta con
+          // el siguiente gesto.
+        }
       }
     };
     // Inicializar/resumir el AudioContext de forma síncrona dentro del
     // primer gesto del usuario (requisito de iOS/móvil para desbloquear audio).
-    window.addEventListener('pointerdown', resume, { once: false });
-    window.addEventListener('keydown', resume, { once: false });
-    window.addEventListener('touchend', resume, { once: false });
+    window.addEventListener('pointerdown', this.unlock, { once: false });
+    window.addEventListener('keydown', this.unlock, { once: false });
+    window.addEventListener('touchend', this.unlock, { once: false });
+    // El mando también desbloquea el audio: quien juegue solo con gamepad no
+    // debe quedarse sin sonido por no haber tocado ratón/teclado.
+    window.addEventListener('gamepadconnected', this.unlock, { once: false });
   }
 
   init() {
@@ -73,6 +81,12 @@ export class SoundManager {
     this.tone(0.12, 523, 523, 'sine', 0.1);
     setTimeout(() => this.tone(0.12, 659, 659, 'sine', 0.1), 120);
     setTimeout(() => this.tone(0.2, 784, 784, 'sine', 0.12), 240);
+  }
+
+  // Confirmación audible al activar el sonido desde la configuración.
+  playToggle() {
+    if (!this.ready()) return;
+    this.tone(0.09, 660, 880, 'sine', 0.07);
   }
 
   playGameOver() {
