@@ -44,7 +44,12 @@ export class KeyboardMouseController extends Controller {
     }
     this.keys.add(key);
     if (key === 'Enter') this._emit('enter');
-    if (key === 'p' || key === 'P' || key === 'Escape') this._emit('pause');
+    // Pausa con P, Espacio o Escape. preventDefault evita que la barra
+    // espaciadora active un botón que tenga el foco (p. ej. JUGAR) o haga scroll.
+    if (key === 'p' || key === 'P' || key === 'Escape' || key === ' ') {
+      e.preventDefault();
+      this._emit('pause');
+    }
   }
 
   _onKeyUp(e) {

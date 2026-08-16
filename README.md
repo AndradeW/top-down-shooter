@@ -14,8 +14,9 @@ Shooter arcade 2D de supervivencia (top-down) para navegador. Sobrevive a oleada
   - Tanque (más vida y daño)
 - **Experiencia y niveles**: los enemigos sueltan gemas de XP con atracción magnética; al subir de nivel, el juego pausa y muestra **3 mejoras aleatorias** (daño, cadencia, velocidad, vida máx., velocidad de proyectil, XP extra).
 - **Pulido visual**: sistema de partículas (disparo, impactos, recolección de XP, daño), screen shake, retroceso al disparar y temática visual espacial (nave con estela, enemigos con figuras propias, láseres, glow).
-- **Audio**: efectos de sonido sintetizados con la Web Audio API y música de fondo generativa, con botón de silencio.
+- **Audio**: efectos de sonido sintetizados con la Web Audio API y música de fondo generativa.
 - **Récord local**: guardado en `localStorage` por navegador, con historial de los últimos 5 puntajes.
+- **Configuración**: menú para ajustar la sensibilidad del stick derecho del mando (curva exponencial), la zona muerta de los sticks, el eje Y, y activar/desactivar vibración, sonido y screen shake.
 
 ## Controles
 
@@ -27,8 +28,7 @@ Shooter arcade 2D de supervivencia (top-down) para navegador. Sobrevive a oleada
 | Apuntar | Ratón |
 | Disparar | Clic izquierdo (mantener para disparo continuo) |
 | Jugar / Reiniciar | Clic en el botón o `Enter` |
-| Pausar | `P` o `Escape` |
-| Silenciar sonido | Botón 🔊 (abajo a la derecha) |
+| Pausar | `P`, `Escape` o barra espaciadora |
 
 ### Móvil / táctil
 
@@ -36,8 +36,22 @@ Shooter arcade 2D de supervivencia (top-down) para navegador. Sobrevive a oleada
 |---|---|
 | Moverse | Joystick virtual en la mitad izquierda de la pantalla |
 | Apuntar y disparar | Joystick virtual en la mitad derecha (dispara mientras lo mantienes) |
-| Pausar | Botón ⏸ (arriba a la derecha) o tecla `P`/`Escape` |
-| Vibración | Botón 📳 (arriba a la derecha, solo móviles compatibles) |
+| Pausar | Botón ⏸ (arriba a la derecha) |
+
+### Mando (Xbox y compatibles)
+
+| Acción | Entrada |
+|---|---|
+| Moverse | Analógico izquierdo |
+| Apuntar | Analógico derecho (si está centrado, mantiene la última dirección) |
+| Disparar | `RT`, `RB` o `A` |
+| Jugar / Reiniciar / Elegir mejora | `A` |
+| Pausar | `Start` |
+| Elegir mejora | D-pad o analógico izquierdo + `A` |
+
+### Configuración
+
+Disponible desde el menú principal o la pausa (botón **CONFIGURACIÓN**). Los ajustes se guardan en `localStorage` por navegador.
 
 ## Requisitos
 
@@ -90,7 +104,12 @@ js/
   Particle.js       Partículas (impactos, explosiones)
   Upgrades.js       Catálogo y selección de mejoras
   Sound.js          Sonido y música con Web Audio API
-  Input.js          Entrada de teclado y ratón
+  Settings.js       Configuración persistente (localStorage)
+  Controller.js     Contrato común de los controladores de entrada
+  KeyboardMouseController.js  Teclado + ratón
+  TouchController.js          Táctil (doble joystick)
+  GamepadController.js         Mando genérico (Gamepad API)
+  Input.js          Fachada de entrada (mando, táctil, teclado/ratón)
   UI.js             Menús, HUD y overlays
 ```
 
@@ -115,3 +134,6 @@ js/
 | 0.10.0 | Pulido de UI aplicado: tipografías Orbitron/Rubik, sistema de tokens, rediseño de menú/HUD/game over/mejoras, indicador de vida baja, accesibilidad y `prefers-reduced-motion`. |
 | 0.11.0 | Soporte móvil: controles táctiles de doble joystick, adaptación de la UI a pantallas pequeñas y desbloqueo de audio con gesto táctil. |
 | 0.12.0 | Pulido por feedback: menú con objetivo, temática espacial, pausa, historial de puntajes, vida numérica, joystick más preciso, vibración configurable y renombrado de Oleada→Nivel / Nivel→Rango. |
+| 0.13.0 | Primer soporte de mando genérico (Gamepad API) con autocalibración de ejes. |
+| 0.14.0 | Refactor de entrada a controladores desacoplados (teclado/ratón, táctil y mando) y pausa con la barra espaciadora. |
+| 0.15.0 | Menú de configuración: sensibilidad y zona muerta del mando, inversión del eje Y, y toggles de vibración, sonido y screen shake. |

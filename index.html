@@ -12,14 +12,8 @@
 <body>
   <canvas id="gameCanvas"></canvas>
 
-  <!-- Botón de sonido -->
-  <button id="soundButton" title="Activar/desactivar sonido" aria-label="Activar o desactivar el sonido">🔊</button>
-
   <!-- Botón de pausa -->
   <button id="pauseButton" title="Pausar" aria-label="Pausar el juego">⏸</button>
-
-  <!-- Botón de vibración -->
-  <button id="vibrateButton" title="Vibración" aria-label="Activar o desactivar la vibración">📳</button>
 
   <!-- HUD -->
   <div id="hud">
@@ -43,6 +37,7 @@
       <li>Moverse: <b>WASD</b> o <b>flechas</b></li>
       <li>Apuntar: <b>ratón</b></li>
       <li>Disparar: <b>clic izquierdo</b></li>
+      <li>Pausa: <b>P</b>, <b>ESPACIO</b> o <b>ESC</b></li>
     </ul>
     <ul class="controls-list touch-controls">
       <li>Moverte: <b>joystick izquierdo</b></li>
@@ -50,6 +45,7 @@
     </ul>
     <p id="menuRecord" class="record hidden"></p>
     <button id="startButton" class="primary-btn">JUGAR</button>
+    <button id="settingsButton" class="secondary-btn">CONFIGURACIÓN</button>
     <p class="hint">o pulsa ENTER</p>
   </div>
 
@@ -78,7 +74,62 @@
     <h1 class="game-title">PAUSA</h1>
     <button id="resumeButton" class="primary-btn">CONTINUAR</button>
     <button id="restartFromPauseButton" class="primary-btn">REINICIAR</button>
-    <p class="hint">o pulsa P / ESC</p>
+    <button id="settingsFromPauseButton" class="secondary-btn">CONFIGURACIÓN</button>
+    <p class="hint">o pulsa P / ESPACIO / ESC</p>
+  </div>
+
+  <!-- Configuración -->
+  <div id="settings" class="overlay hidden">
+    <h1 class="game-title">CONFIGURACIÓN</h1>
+    <div class="settings-panel">
+      <div class="settings-row">
+        <label for="aimCurveSlider" class="settings-label">
+          <span>Sensibilidad del stick derecho (mando)</span>
+          <span id="aimCurveValue" class="settings-value">1.0</span>
+        </label>
+        <input type="range" id="aimCurveSlider" class="settings-slider" min="1" max="2.5" step="0.1" value="1">
+        <p class="settings-hint">1.0 = respuesta lineal. Sube el valor para más precisión en movimientos pequeños del stick.</p>
+      </div>
+
+      <div class="settings-row">
+        <label for="deadZoneSlider" class="settings-label">
+          <span>Zona muerta de los sticks (mando)</span>
+          <span id="deadZoneValue" class="settings-value">0.20</span>
+        </label>
+        <input type="range" id="deadZoneSlider" class="settings-slider" min="0.1" max="0.4" step="0.01" value="0.2">
+        <p class="settings-hint">Umbral antes de que el stick responda. Súbelo si los sticks "derivan" solos.</p>
+      </div>
+
+      <div class="settings-row settings-toggle">
+        <label for="invertAimYToggle" class="settings-label">
+          <span>Invertir eje Y del stick derecho</span>
+          <input type="checkbox" id="invertAimYToggle" class="settings-switch">
+        </label>
+      </div>
+
+      <div class="settings-row settings-toggle">
+        <label for="vibrateToggle" class="settings-label">
+          <span>Vibración</span>
+          <input type="checkbox" id="vibrateToggle" class="settings-switch">
+        </label>
+      </div>
+
+      <div class="settings-row settings-toggle">
+        <label for="soundToggle" class="settings-label">
+          <span>Sonido</span>
+          <input type="checkbox" id="soundToggle" class="settings-switch">
+        </label>
+      </div>
+
+      <div class="settings-row settings-toggle">
+        <label for="screenShakeToggle" class="settings-label">
+          <span>Screen shake al recibir daño</span>
+          <input type="checkbox" id="screenShakeToggle" class="settings-switch">
+        </label>
+      </div>
+    </div>
+    <button id="settingsBackButton" class="primary-btn">VOLVER</button>
+    <p class="hint">o pulsa ESC</p>
   </div>
 
   <!-- Selección de mejora -->

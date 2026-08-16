@@ -7,6 +7,7 @@ import { XP } from './XP.js';
 import { rollUpgrades } from './Upgrades.js';
 import { SoundManager } from './Sound.js';
 import { UI } from './UI.js';
+import { Settings } from './Settings.js';
 
 export class Game {
   constructor(canvas, ui) {
@@ -15,6 +16,7 @@ export class Game {
     this.ui = ui;
     this.input = new Input(canvas);
     this.sound = new SoundManager();
+    this.sound.setEnabled(Settings.get('sound'));
     this.state = 'menu'; // menu | playing | gameover
     this.score = 0;
     this.projectiles = [];
@@ -49,39 +51,49 @@ export class Game {
 
     document.getElementById('startButton').addEventListener('click', () => this.start());
     document.getElementById('restartButton').addEventListener('click', () => this.start());
-    document.getElementById('soundButton').addEventListener('click', (e) => {
-      this.sound.toggle();
-      e.currentTarget.classList.toggle('muted', !this.sound.enabled);
-      if (this.state === 'playing') {
-        if (this.sound.enabled) this.sound.startMusic();
-        else this.sound.stopMusic();
-      }
-    });
-
-    // Vibración (solo compatible en móviles)
-    this.vibrateEnabled = localStorage.getItem('topDownShooter_vibrate') !== 'off';
-    this.vibrateButton = document.getElementById('vibrateButton');
-    document.getElementById('vibrateButton').addEventListener('click', () => {
-      this.vibrateEnabled = !this.vibrateEnabled;
-      localStorage.setItem('topDownShooter_vibrate', this.vibrateEnabled ? 'on' : 'off');
-      this.vibrateButton.classList.toggle('muted', !this.vibrateEnabled);
-    });
-    if (!navigator.vibrate) {
-      this.vibrateButton.classList.add('hidden');
-    } else {
-      this.vibrateButton.classList.toggle('muted', !this.vibrateEnabled);
-    }
 
     this.pauseButton = document.getElementById('pauseButton');
     document.getElementById('pauseButton').addEventListener('click', () => this.togglePause());
     document.getElementById('resumeButton').addEventListener('click', () => this.togglePause());
     document.getElementById('restartFromPauseButton').addEventListener('click', () => this.start());
-    this.input.onPausePress.push(() => this.togglePause());
+    document.getElementById('settingsButton').addEventListener('click', () => this.ui.showSettings());
+    document.getElementById('settingsFromPauseButton').addEventListener('click', () => this.ui.showSettings());
+    document.getElementById('settingsBackButton').addEventListener('click', () => this.ui.hideSettings());
+
+    // Configuración: conecta los controles de la UI con sus destinatarios.
+    this.ui.bindSettings({
+      onAimCurve: (v) => Settings.set('aimCurve', v),
+      onDeadZone: (v) => Settings.set('deadZone', v),
+      onInvertAimY: (v) => Settings.set('invertAimY', v),
+      onVibrate: (v) => Settings.set('vibrate', v),
+      onSound: (v) => {
+        Settings.set('sound', v);
+        this.sound.setEnabled(v);
+        if (this.state === 'playing') {
+          if (v) this.sound.startMusic();
+          else this.sound.stopMusic();
+        }
+      },
+      onScreenShake: (v) => Settings.set('screenShake', v),
+    });
+    this.ui.setSettings(Settings.values);
+
+    this.input.onPausePress.push(() => {
+      if (this.ui.settingsOpen) {
+        this.ui.hideSettings();
+        return;
+      }
+      this.togglePause();
+    });
 
     window.addEventListener('blur', () => {
       if (this.state === 'playing') this.pause();
     });
     this.input.onEnterPress.push(() => {
+      if (this.ui.settingsOpen) {
+        this.ui.hideSettings();
+        return;
+      }
       if (this.state === 'menu' || this.state === 'gameover') this.start();
     });
     this.input.onActionAPress.push(() => {
@@ -129,10 +141,6 @@ export class Game {
     this.state = 'playing';
     this.ui.hideOverlays();
     this.ui.pauseButton.classList.remove('hidden');
-    if (navigator.vibrate) {
-      this.ui.vibrateButton.classList.remove('hidden');
-      this.vibrateButton.classList.toggle('muted', !this.vibrateEnabled);
-    }
     this.sound.startMusic();
   }
 
@@ -152,6 +160,10 @@ export class Game {
   }
 
   togglePause() {
+    if (this.ui.settingsOpen) {
+      this.ui.hideSettings();
+      return;
+    }
     if (this.state === 'playing') this.pause();
     else if (this.state === 'paused') this.resume();
   }
@@ -209,7 +221,7 @@ export class Game {
   }
 
   vibrate(pattern) {
-    if (this.vibrateEnabled && navigator.vibrate) {
+    if (Settings.get('vibrate') && navigator.vibrate) {
       try {
         navigator.vibrate(pattern);
       } catch {
@@ -414,7 +426,7 @@ export class Game {
 
     // Screen shake: desplaza el mundo aleatoriamente según la intensidad
     ctx.save();
-    if (this.shake > 0) {
+    if (this.shake > 0 && Settings.get('screenShake')) {
       ctx.translate(
         (Math.random() * 2 - 1) * this.shake,
         (Math.random() * 2 - 1) * this.shake

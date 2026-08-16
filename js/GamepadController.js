@@ -1,4 +1,5 @@
 import { Controller } from './Controller.js';
+import { Settings } from './Settings.js';
 
 // Mando (Xbox y compatibles) con la Gamepad API nativa.
 // Toda la lógica específica del mando vive aquí, aislada del resto de
@@ -16,8 +17,9 @@ export class GamepadController extends Controller {
       aimY: 0,
       firing: false,
     };
-    this.DEAD_ZONE = 0.2;
     this.AIM_DISTANCE = 500;
+    // Umbral del analógico izquierdo para navegar mejoras
+    this.NAV_THRESHOLD = 0.6;
     // Flancos para detectar pulsaciones únicas por frame de polling
     this._edges = {
       enter: false,
@@ -93,10 +95,12 @@ export class GamepadController extends Controller {
     this._edge('enter', btnPressed(0));
     this._edge('pause', btnPressed(9));
     this._edge('actionA', btnPressed(0));
-    this._edge('dpadLeft', btnPressed(14));
-    this._edge('dpadRight', btnPressed(15));
-    this._edge('dpadUp', btnPressed(12));
-    this._edge('dpadDown', btnPressed(13));
+    // D-pad o analógico izquierdo para navegar las mejoras (Game solo lo
+    // procesa en estado 'levelup', así que no molesta durante la partida).
+    this._edge('dpadLeft', btnPressed(14) || this.gamepad.moveX < -this.NAV_THRESHOLD);
+    this._edge('dpadRight', btnPressed(15) || this.gamepad.moveX > this.NAV_THRESHOLD);
+    this._edge('dpadUp', btnPressed(12) || this.gamepad.moveY < -this.NAV_THRESHOLD);
+    this._edge('dpadDown', btnPressed(13) || this.gamepad.moveY > this.NAV_THRESHOLD);
   }
 
   _edge(event, pressed) {
@@ -115,7 +119,8 @@ export class GamepadController extends Controller {
 
   getAimPoint(playerX, playerY) {
     if (!this.gamepad.connected) return null;
-    const v = this._vector(this.gamepad.aimX, this.gamepad.aimY);
+    const aimY = Settings.get('invertAimY') ? -this.gamepad.aimY : this.gamepad.aimY;
+    const v = this._vectorAim(this.gamepad.aimX, aimY);
     if (!v) return null;
     return {
       x: playerX + v.x * this.AIM_DISTANCE,
@@ -127,11 +132,23 @@ export class GamepadController extends Controller {
     return this.gamepad.firing;
   }
 
-  // Aplica dead zone y normaliza un par de ejes; null si está centrado.
+  // Aplica zona muerta y normaliza un par de ejes; null si está centrado.
   _vector(x, y) {
     const mag = Math.hypot(x, y);
-    if (mag < this.DEAD_ZONE) return null;
-    const scaled = (mag - this.DEAD_ZONE) / (1 - this.DEAD_ZONE);
+    if (mag < Settings.get('deadZone')) return null;
+    const scaled = (mag - Settings.get('deadZone')) / (1 - Settings.get('deadZone'));
     return { x: (x / mag) * scaled, y: (y / mag) * scaled };
+  }
+
+  // Como _vector pero aplica la curva de respuesta configurable: con la curva
+  // por encima de 1.0, los movimientos pequeños del stick producen una puntería
+  // proporcionalmente menor (más precisión cerca del centro). Con curva 1.0 el
+  // comportamiento es idéntico al original.
+  _vectorAim(x, y) {
+    const mag = Math.hypot(x, y);
+    if (mag < Settings.get('deadZone')) return null;
+    const scaled = (mag - Settings.get('deadZone')) / (1 - Settings.get('deadZone'));
+    const curved = Math.pow(scaled, Settings.get('aimCurve'));
+    return { x: (x / mag) * curved, y: (y / mag) * curved };
   }
 }

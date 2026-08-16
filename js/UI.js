@@ -4,7 +4,6 @@ export class UI {
     this.gameover = document.getElementById('gameover');
     this.pauseEl = document.getElementById('pause');
     this.pauseButton = document.getElementById('pauseButton');
-    this.vibrateButton = document.getElementById('vibrateButton');
     this.upgradesEl = document.getElementById('upgrades');
     this.upgradeOptionsEl = document.getElementById('upgradeOptions');
     this.scoreEl = document.getElementById('score');
@@ -22,6 +21,59 @@ export class UI {
     this.statBest = document.getElementById('statBest');
     this.historyBlock = document.getElementById('historyBlock');
     this.historyList = document.getElementById('historyList');
+    this.settingsEl = document.getElementById('settings');
+    this.aimCurveSlider = document.getElementById('aimCurveSlider');
+    this.aimCurveValue = document.getElementById('aimCurveValue');
+    this.deadZoneSlider = document.getElementById('deadZoneSlider');
+    this.deadZoneValue = document.getElementById('deadZoneValue');
+    this.invertAimYToggle = document.getElementById('invertAimYToggle');
+    this.vibrateToggle = document.getElementById('vibrateToggle');
+    this.soundToggle = document.getElementById('soundToggle');
+    this.screenShakeToggle = document.getElementById('screenShakeToggle');
+    this.settingsOpen = false;
+  }
+
+  showSettings() {
+    this.settingsOpen = true;
+    this.settingsEl.classList.remove('hidden');
+  }
+
+  hideSettings() {
+    this.settingsOpen = false;
+    this.settingsEl.classList.add('hidden');
+  }
+
+  // Conecta los controles de configuración con quien los aplica.
+  bindSettings(handlers) {
+    const bindRange = (slider, label, formatter, onSet) => {
+      slider.addEventListener('input', () => {
+        const v = parseFloat(slider.value);
+        label.textContent = formatter(v);
+        onSet(v);
+      });
+    };
+    bindRange(this.aimCurveSlider, this.aimCurveValue, (v) => v.toFixed(1), handlers.onAimCurve);
+    bindRange(this.deadZoneSlider, this.deadZoneValue, (v) => v.toFixed(2), handlers.onDeadZone);
+
+    const bindToggle = (input, onSet) => {
+      input.addEventListener('change', () => onSet(input.checked));
+    };
+    bindToggle(this.invertAimYToggle, handlers.onInvertAimY);
+    bindToggle(this.vibrateToggle, handlers.onVibrate);
+    bindToggle(this.soundToggle, handlers.onSound);
+    bindToggle(this.screenShakeToggle, handlers.onScreenShake);
+  }
+
+  // Inicializa los controles con los valores actuales de Settings.
+  setSettings(state) {
+    this.aimCurveSlider.value = String(state.aimCurve);
+    this.aimCurveValue.textContent = Number(state.aimCurve).toFixed(1);
+    this.deadZoneSlider.value = String(state.deadZone);
+    this.deadZoneValue.textContent = Number(state.deadZone).toFixed(2);
+    this.invertAimYToggle.checked = !!state.invertAimY;
+    this.vibrateToggle.checked = !!state.vibrate;
+    this.soundToggle.checked = !!state.sound;
+    this.screenShakeToggle.checked = !!state.screenShake;
   }
 
   showMenu(bestScore) {
@@ -35,8 +87,9 @@ export class UI {
     this.gameover.classList.add('hidden');
     this.pauseEl.classList.add('hidden');
     this.pauseButton.classList.add('hidden');
-    this.vibrateButton.classList.add('hidden');
     this.upgradesEl.classList.add('hidden');
+    this.settingsEl.classList.add('hidden');
+    this.settingsOpen = false;
   }
 
   hideOverlays() {
@@ -44,6 +97,8 @@ export class UI {
     this.gameover.classList.add('hidden');
     this.pauseEl.classList.add('hidden');
     this.upgradesEl.classList.add('hidden');
+    this.settingsEl.classList.add('hidden');
+    this.settingsOpen = false;
   }
 
   showPause() {

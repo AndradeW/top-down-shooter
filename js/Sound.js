@@ -35,6 +35,11 @@ export class SoundManager {
     return this.enabled;
   }
 
+  setEnabled(v) {
+    this.enabled = !!v;
+    if (!this.enabled) this.stopMusic();
+  }
+
   toggleMusic() {
     this.musicEnabled = !this.musicEnabled;
     if (!this.musicEnabled) this.stopMusic();
