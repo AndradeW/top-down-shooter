@@ -58,7 +58,10 @@ export class Game {
     document.getElementById('restartFromPauseButton').addEventListener('click', () => this.start());
     document.getElementById('settingsButton').addEventListener('click', () => this.ui.showSettings());
     document.getElementById('settingsFromPauseButton').addEventListener('click', () => this.ui.showSettings());
-    document.getElementById('settingsBackButton').addEventListener('click', () => this.ui.hideSettings());
+    document.getElementById('settingsBackButton').addEventListener('click', () => {
+      this.ui.hideSettings();
+      this._setFocusForState();
+    });
 
     // Configuración: conecta los controles de la UI con sus destinatarios.
     this.ui.bindSettings({
@@ -81,6 +84,7 @@ export class Game {
     this.input.onPausePress.push(() => {
       if (this.ui.settingsOpen) {
         this.ui.hideSettings();
+        this._setFocusForState();
         return;
       }
       this.togglePause();
@@ -90,12 +94,25 @@ export class Game {
       if (this.state === 'playing') this.pause();
     });
     this.input.onEnterPress.push(() => {
-      if (this.ui.settingsOpen) {
-        this.ui.hideSettings();
+      if (this.ui.settingsOpen || this.ui.activeGroup) {
+        this.ui.activateFocus();
         return;
       }
       if (this.state === 'menu' || this.state === 'gameover') this.start();
     });
+
+    // Navegación por mando (D-pad / analógico izquierdo) y flechas del
+    // teclado en los menús y la configuración.
+    const navigateMenu = (vertical) => (dir) => {
+      if (this.ui.settingsOpen || this.state === 'menu' || this.state === 'gameover' || this.state === 'paused') {
+        if (vertical) this.ui.navigateVertical(dir);
+        else this.ui.navigateHorizontal(dir);
+      }
+    };
+    this.input.onDPadLeft.push(() => navigateMenu(false)(-1));
+    this.input.onDPadRight.push(() => navigateMenu(false)(1));
+    this.input.onDPadUp.push(() => navigateMenu(true)(-1));
+    this.input.onDPadDown.push(() => navigateMenu(true)(1));
     this.input.onActionAPress.push(() => {
       if (this.state === 'levelup' && this.pendingUpgrades.length > 0) {
         this.applyUpgrade(this.pendingUpgrades[this.selectedUpgrade]);
@@ -162,10 +179,19 @@ export class Game {
   togglePause() {
     if (this.ui.settingsOpen) {
       this.ui.hideSettings();
+      this._setFocusForState();
       return;
     }
     if (this.state === 'playing') this.pause();
     else if (this.state === 'paused') this.resume();
+  }
+
+  // Restablece el grupo de foco según el estado tras cerrar la configuración.
+  _setFocusForState() {
+    if (this.state === 'menu') this.ui.setFocusGroup('menu');
+    else if (this.state === 'gameover') this.ui.setFocusGroup('gameover');
+    else if (this.state === 'paused') this.ui.setFocusGroup('pause');
+    else this.ui.clearFocusGroup();
   }
 
   startWave() {
@@ -313,8 +339,15 @@ export class Game {
       }
     }
 
-    // Actualizar proyectiles
-    for (const p of this.projectiles) p.update(dt);
+    // Actualizar proyectiles. Sin vida máxima: vuelan hasta salir de la
+    // pantalla (siempre alcanzan el borde visible) y ahí se eliminan.
+    const margin = 30;
+    for (const p of this.projectiles) {
+      p.update(dt);
+      if (p.x < -margin || p.x > this.width + margin || p.y < -margin || p.y > this.height + margin) {
+        p.alive = false;
+      }
+    }
     this.projectiles = this.projectiles.filter((p) => p.alive);
 
     // Actualizar enemigos

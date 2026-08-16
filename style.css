@@ -71,6 +71,18 @@ canvas {
   outline-offset: 3px;
 }
 
+/* Elemento enfocado por mando/flechas */
+.focused {
+  outline: 2px solid var(--accent-xp);
+  outline-offset: 3px;
+}
+
+.settings-row:has(.focused) {
+  outline: 1px solid rgba(0, 229, 255, 0.5);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
 /* ===== HUD ===== */
 #hud {
   position: fixed;

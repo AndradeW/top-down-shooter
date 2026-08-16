@@ -6,6 +6,13 @@ export class UI {
     this.pauseButton = document.getElementById('pauseButton');
     this.upgradesEl = document.getElementById('upgrades');
     this.upgradeOptionsEl = document.getElementById('upgradeOptions');
+    this.startButton = document.getElementById('startButton');
+    this.settingsButton = document.getElementById('settingsButton');
+    this.restartButton = document.getElementById('restartButton');
+    this.resumeButton = document.getElementById('resumeButton');
+    this.restartFromPauseButton = document.getElementById('restartFromPauseButton');
+    this.settingsFromPauseButton = document.getElementById('settingsFromPauseButton');
+    this.settingsBackButton = document.getElementById('settingsBackButton');
     this.scoreEl = document.getElementById('score');
     this.waveEl = document.getElementById('wave');
     this.healthFill = document.getElementById('healthFill');
@@ -31,16 +38,114 @@ export class UI {
     this.soundToggle = document.getElementById('soundToggle');
     this.screenShakeToggle = document.getElementById('screenShakeToggle');
     this.settingsOpen = false;
+
+    // Navegación por mando/teclado: cada overlay expone sus elementos
+    // enfocables en orden. El juego la maneja con D-pad/analógico/flechas.
+    this.focusGroups = {
+      menu: [this.startButton, this.settingsButton],
+      pause: [this.resumeButton, this.restartFromPauseButton, this.settingsFromPauseButton],
+      gameover: [this.restartButton],
+      settings: [
+        this.aimCurveSlider,
+        this.deadZoneSlider,
+        this.invertAimYToggle,
+        this.vibrateToggle,
+        this.soundToggle,
+        this.screenShakeToggle,
+        this.settingsBackButton,
+      ],
+    };
+    this.activeGroup = null;
+    this.focusIndex = 0;
   }
 
   showSettings() {
     this.settingsOpen = true;
     this.settingsEl.classList.remove('hidden');
+    this.setFocusGroup('settings');
   }
 
   hideSettings() {
     this.settingsOpen = false;
     this.settingsEl.classList.add('hidden');
+    this.clearFocusGroup();
+  }
+
+  // ---- Navegación por foco (mando / flechas) ----
+
+  setFocusGroup(name) {
+    this.activeGroup = name;
+    this.focusIndex = 0;
+    this._renderFocus();
+  }
+
+  clearFocusGroup() {
+    if (this.activeGroup) {
+      const group = this.focusGroups[this.activeGroup];
+      const prev = group && group[this.focusIndex];
+      if (prev) prev.classList.remove('focused');
+    }
+    this.activeGroup = null;
+    this.focusIndex = 0;
+  }
+
+  _renderFocus() {
+    for (const name of Object.keys(this.focusGroups)) {
+      for (const el of this.focusGroups[name]) el.classList.remove('focused');
+    }
+    const group = this.focusGroups[this.activeGroup];
+    if (group && group.length > 0) {
+      const el = group[this.focusIndex];
+      el.classList.add('focused');
+      if (typeof el.scrollIntoView === 'function') el.scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  // Mueve la selección verticalmente (se envuelve al llegar a los extremos).
+  navigateVertical(dir) {
+    const group = this.focusGroups[this.activeGroup];
+    if (!group || group.length === 0) return;
+    this.focusIndex = (this.focusIndex + dir + group.length) % group.length;
+    this._renderFocus();
+  }
+
+  // Horizontal: ajusta sliders/toggles en configuración; en el resto de
+  // overlays se comporta como navegación vertical.
+  navigateHorizontal(dir) {
+    const group = this.focusGroups[this.activeGroup];
+    if (!group || group.length === 0) return;
+    if (this.activeGroup === 'settings') {
+      const el = group[this.focusIndex];
+      if (el.type === 'range') {
+        const step = parseFloat(el.step) || 1;
+        const min = parseFloat(el.min);
+        const max = parseFloat(el.max);
+        const v = Math.max(min, Math.min(max, parseFloat(el.value) + dir * step));
+        el.value = String(v);
+        el.dispatchEvent(new Event('input'));
+      } else if (el.type === 'checkbox') {
+        el.checked = !el.checked;
+        el.dispatchEvent(new Event('change'));
+      } else {
+        this.navigateVertical(dir);
+      }
+      return;
+    }
+    this.navigateVertical(dir);
+  }
+
+  // Activa el elemento enfocado (botón o toggle). A / Enter.
+  activateFocus() {
+    const group = this.focusGroups[this.activeGroup];
+    if (!group || group.length === 0) return;
+    const el = group[this.focusIndex];
+    if (!el) return;
+    if (el.type === 'checkbox') {
+      el.checked = !el.checked;
+      el.dispatchEvent(new Event('change'));
+    } else if (el.type !== 'range') {
+      el.click();
+    }
   }
 
   // Conecta los controles de configuración con quien los aplica.
@@ -90,6 +195,7 @@ export class UI {
     this.upgradesEl.classList.add('hidden');
     this.settingsEl.classList.add('hidden');
     this.settingsOpen = false;
+    this.setFocusGroup('menu');
   }
 
   hideOverlays() {
@@ -99,14 +205,17 @@ export class UI {
     this.upgradesEl.classList.add('hidden');
     this.settingsEl.classList.add('hidden');
     this.settingsOpen = false;
+    this.clearFocusGroup();
   }
 
   showPause() {
     this.pauseEl.classList.remove('hidden');
+    this.setFocusGroup('pause');
   }
 
   hidePause() {
     this.pauseEl.classList.add('hidden');
+    this.clearFocusGroup();
   }
 
   updateHUD(score, health, maxHealth) {
@@ -141,6 +250,7 @@ export class UI {
     this.renderHistory(history, score);
     this.pauseButton.classList.add('hidden');
     this.gameover.classList.remove('hidden');
+    this.setFocusGroup('gameover');
   }
 
   renderHistory(history, currentScore) {

@@ -10,6 +10,9 @@ export class KeyboardMouseController extends Controller {
     this.mouseX = 0;
     this.mouseY = 0;
     this.mouseDown = false;
+    // Flechas como navegación (mismos eventos dpad*), con detección de flanco
+    // para que mantener pulsada la tecla no repita la acción.
+    this._prevNav = { up: false, down: false, left: false, right: false };
     this._boundKeyDown = (e) => this._onKeyDown(e);
     this._boundKeyUp = (e) => this._onKeyUp(e);
     this._boundMouseMove = (e) => this._onMouseMove(e);
@@ -44,6 +47,20 @@ export class KeyboardMouseController extends Controller {
     }
     this.keys.add(key);
     if (key === 'Enter') this._emit('enter');
+    // Flechas también emiten navegación (dpads); Game decide cuándo usarlas.
+    if (key === 'ArrowUp') {
+      if (!this._prevNav.up) this._emit('dpadUp');
+      this._prevNav.up = true;
+    } else if (key === 'ArrowDown') {
+      if (!this._prevNav.down) this._emit('dpadDown');
+      this._prevNav.down = true;
+    } else if (key === 'ArrowLeft') {
+      if (!this._prevNav.left) this._emit('dpadLeft');
+      this._prevNav.left = true;
+    } else if (key === 'ArrowRight') {
+      if (!this._prevNav.right) this._emit('dpadRight');
+      this._prevNav.right = true;
+    }
     // Pausa con P, Espacio o Escape. preventDefault evita que la barra
     // espaciadora active un botón que tenga el foco (p. ej. JUGAR) o haga scroll.
     if (key === 'p' || key === 'P' || key === 'Escape' || key === ' ') {
@@ -53,7 +70,12 @@ export class KeyboardMouseController extends Controller {
   }
 
   _onKeyUp(e) {
-    this.keys.delete(e.key);
+    const key = e.key;
+    this.keys.delete(key);
+    if (key === 'ArrowUp') this._prevNav.up = false;
+    else if (key === 'ArrowDown') this._prevNav.down = false;
+    else if (key === 'ArrowLeft') this._prevNav.left = false;
+    else if (key === 'ArrowRight') this._prevNav.right = false;
   }
 
   _onMouseMove(e) {

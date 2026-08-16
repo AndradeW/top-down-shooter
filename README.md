@@ -45,9 +45,13 @@ Shooter arcade 2D de supervivencia (top-down) para navegador. Sobrevive a oleada
 | Moverse | Analógico izquierdo |
 | Apuntar | Analógico derecho (si está centrado, mantiene la última dirección) |
 | Disparar | `RT`, `RB` o `A` |
-| Jugar / Reiniciar / Elegir mejora | `A` |
+| Jugar / Continuar / Reiniciar / Elegir mejora | `A` |
 | Pausar | `Start` |
+| Navegar menús y configuración | D-pad o analógico izquierdo |
 | Elegir mejora | D-pad o analógico izquierdo + `A` |
+| Cerrar configuración | `Start`, `ESC` o `P` |
+
+> En menús, pausa y configuración, la selección se mueve con el D-pad/analógico (o flechas del teclado) y se activa con `A`/`Enter`. En configuración, izquierda/derecha ajustan los sliders y alternan los toggles.
 
 ### Configuración
 
@@ -137,3 +141,4 @@ js/
 | 0.13.0 | Primer soporte de mando genérico (Gamepad API) con autocalibración de ejes. |
 | 0.14.0 | Refactor de entrada a controladores desacoplados (teclado/ratón, táctil y mando) y pausa con la barra espaciadora. |
 | 0.15.0 | Menú de configuración: sensibilidad y zona muerta del mando, inversión del eje Y, y toggles de vibración, sonido y screen shake. |
+| 0.16.0 | Navegación de menús con mando/flechas (D-pad/analógico + `A`) y proyectiles que vuelan hasta el borde de la pantalla. |
